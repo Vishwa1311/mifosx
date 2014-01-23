@@ -1,0 +1,1 @@
+ALTER TABLE `x_registered_table` ADD COLUMN `is_pre_registered_data_table` TINYINT(1) NULL DEFAULT '1' AFTER `application_table_name`;

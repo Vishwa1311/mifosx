@@ -107,11 +107,13 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
     }
 
     @Override
-    public List<DatatableData> retrieveDatatableNames(final String appTable) {
+    public List<DatatableData> retrieveDatatableNames(final String appTable, final Boolean isPreRegistered) {
 
         String andClause;
         if (appTable == null) {
             andClause = "";
+        }else if (isPreRegistered) {
+            andClause = " and application_table_name = '" + appTable + "'" + "and is_pre_registered_data_table = 1 ";
         } else {
             andClause = " and application_table_name = '" + appTable + "'";
         }
@@ -132,7 +134,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             final String registeredDatatableName = rs.getString("registered_table_name");
             final List<ResultsetColumnHeaderData> columnHeaderData = this.genericDataService
                     .fillResultsetColumnHeaders(registeredDatatableName);
-
+            
             datatables.add(DatatableData.create(appTableName, registeredDatatableName, columnHeaderData));
         }
 

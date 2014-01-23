@@ -32,4 +32,6 @@ public interface ClientReadPlatformService {
     Collection<ClientData> retrieveActiveClientMembersOfCenter(final Long centerId);
 
     ClientData retrieveAllClosureReasons(String clientClosureReason);
+    
+    ClientData retrieveAllPreRegisteredClientDataTables(final Long clientId);
 }

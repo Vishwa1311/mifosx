@@ -30,4 +30,8 @@ public class DatatableData {
         this.registeredTableName = registeredTableName;
         this.columnHeaderData = columnHeaderData;
     }
+    
+    public String getRegisteredTableName() {
+        return this.registeredTableName;
+    }
 }

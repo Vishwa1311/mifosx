@@ -15,7 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 public interface ReadWriteNonCoreDataService {
 
-    List<DatatableData> retrieveDatatableNames(String appTable);
+    List<DatatableData> retrieveDatatableNames(String appTable, final Boolean isPreRegistered);
 
     DatatableData retrieveDatatable(String datatable);
 

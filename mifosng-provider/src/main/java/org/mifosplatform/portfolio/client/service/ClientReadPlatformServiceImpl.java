@@ -21,6 +21,8 @@ import org.mifosplatform.infrastructure.core.domain.JdbcSupport;
 import org.mifosplatform.infrastructure.core.service.Page;
 import org.mifosplatform.infrastructure.core.service.PaginationHelper;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
+import org.mifosplatform.infrastructure.dataqueries.data.DatatableData;
+import org.mifosplatform.infrastructure.dataqueries.service.ReadWriteNonCoreDataService;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.organisation.office.data.OfficeData;
 import org.mifosplatform.organisation.office.service.OfficeReadPlatformService;
@@ -49,6 +51,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     private final OfficeReadPlatformService officeReadPlatformService;
     private final StaffReadPlatformService staffReadPlatformService;
     private final CodeValueReadPlatformService codeValueReadPlatformService;
+    private final ReadWriteNonCoreDataService readWriteNonCoreDataService;
     // data mappers
     private final PaginationHelper<ClientData> paginationHelper = new PaginationHelper<ClientData>();
     private final ClientMapper clientMapper = new ClientMapper();
@@ -59,12 +62,13 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     @Autowired
     public ClientReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
             final OfficeReadPlatformService officeReadPlatformService, final StaffReadPlatformService staffReadPlatformService,
-            final CodeValueReadPlatformService codeValueReadPlatformService) {
+            final CodeValueReadPlatformService codeValueReadPlatformService, final ReadWriteNonCoreDataService readWriteNonCoreDataService) {
         this.context = context;
         this.officeReadPlatformService = officeReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.staffReadPlatformService = staffReadPlatformService;
         this.codeValueReadPlatformService = codeValueReadPlatformService;
+        this.readWriteNonCoreDataService = readWriteNonCoreDataService;
     }
 
     @Override
@@ -88,7 +92,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             staffOptions = null;
         }
 
-        return ClientData.template(defaultOfficeId, new LocalDate(), offices, staffOptions, null);
+        return ClientData.template(defaultOfficeId, new LocalDate(), offices, staffOptions, null, null);
     }
 
     @Override
@@ -249,6 +253,22 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
         return this.jdbcTemplate.query(sql, this.membersOfGroupMapper,
                 new Object[] { hierarchySearchString, groupId, ClientStatus.ACTIVE.getValue() });
     }
+    
+    @Override
+    public ClientData retrieveAllPreRegisteredClientDataTables(final Long clientId) {
+       
+        final ClientData clientBasicData = this.retrieveOne(clientId);
+        final List<DatatableData> datatables = this.readWriteNonCoreDataService.retrieveDatatableNames("m_client", true);
+        final Collection<DatatableData> datatableResultSet = new ArrayList<DatatableData>();
+        for (DatatableData datatableData : datatables){
+            DatatableData result = this.readWriteNonCoreDataService.retrieveDatatable(datatableData.getRegisteredTableName());
+            datatableResultSet.add(result);
+        }
+        if (datatableResultSet.size() > 0) {
+            clientBasicData.setClientDataTableDetails(datatableResultSet);
+        }
+        return clientBasicData;
+    }
 
     private static final class ClientMembersOfGroupMapper implements RowMapper<ClientData> {
 
@@ -345,7 +365,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                     closedByFirstname, closedByLastname);
 
             return ClientData.instance(accountNo, status, officeId, officeName, transferToOfficeId, transferToOfficeName, id, firstname,
-                    middlename, lastname, fullname, displayName, externalId, mobileNo, activationDate, imageId, staffId, staffName,timeline);
+                    middlename, lastname, fullname, displayName, externalId, mobileNo, activationDate, imageId, staffId, staffName,timeline, null);
 
         }
     }
@@ -459,7 +479,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                     closedByFirstname, closedByLastname);
 
             return ClientData.instance(accountNo, status, officeId, officeName, transferToOfficeId, transferToOfficeName, id, firstname,
-                    middlename, lastname, fullname, displayName, externalId, mobileNo, activationDate, imageId, staffId, staffName,timeline);
+                    middlename, lastname, fullname, displayName, externalId, mobileNo, activationDate, imageId, staffId, staffName,timeline, null);
 
         }
     }
@@ -571,7 +591,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     public ClientData retrieveAllClosureReasons(final String clientClosureReason) {
         final List<CodeValueData> closureReasons = new ArrayList<CodeValueData>(
                 this.codeValueReadPlatformService.retrieveCodeValuesByCode(clientClosureReason));
-        return ClientData.template(null, null, null, null, closureReasons);
+        return ClientData.template(null, null, null, null, closureReasons, null);
     }
 
 }
