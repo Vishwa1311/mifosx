@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.mifosplatform.integrationtests.common.ClientHelper;
 import org.mifosplatform.integrationtests.common.accounting.Account;
-import org.mifosplatform.integrationtests.common.loans.LoanProductTestBuilder;
 
 import com.google.gson.Gson;
 
@@ -22,9 +21,11 @@ public class SavingProductTestBuilder {
     private static final String DAILY = "1";
     private static final String MONTHLY = "4";
     private static final String QUARTERLY = "5";
-    private static final String ANNUALLY = "7";
+    private static final String ANNUAL = "7";
     private static final String INTEREST_CALCULATION_USING_DAILY_BALANCE = "1";
     private static final String INTEREST_CALCULATION_USING_AVERAGE_DAILY_BALANCE = "2";
+    private static final String DAYS_360 = "360";
+    private static final String DAYS_365 = "365";
     private static final String NONE = "1";
     private static final String CASH_BASED = "2";
     private static final String ACCURAL_BASED = "3";
@@ -37,8 +38,19 @@ public class SavingProductTestBuilder {
     private String interestCalculationType = INTEREST_CALCULATION_USING_DAILY_BALANCE;
     private String nominalAnnualInterestRate = "5.0";
     private String accountingRule = NONE;
+    private String savingsReferenceAccountId = "16";
+    private String transfersInSuspenseAccountId = "16";
+    private String savingsControlAccountId = "15";
+    private String interestOnSavingsAccountId = "18";
+    private String incomeFromFeeAccountId = "4";
+    private String incomeFromPenaltyAccountId = "4";
+    private String minRequiredOpeningBalance = "100.0";
+    private String lockinPeriodFrequency = "1";
+    private String withdrawalFeeForTransfers = "true";
+    private String lockinPeriodFrequencyType = WEEKS;
     private final String currencyCode = INR;
-    private final String interestCalculationDaysInYearType = "365";
+    private final String interestCalculationDaysInYearType = DAYS_365;
+    
     private Account[] accountList = null;
 
     public String build() {
@@ -52,12 +64,22 @@ public class SavingProductTestBuilder {
         map.put("locale", LOCALE);
         map.put("digitsAfterDecimal", DIGITS_AFTER_DECIMAL);
         map.put("inMultiplesOf", IN_MULTIPLES_OF);
-        map.put("interestCalculationType", INTEREST_CALCULATION_USING_DAILY_BALANCE);
+        map.put("interestCalculationType", this.interestCalculationType);
         map.put("nominalAnnualInterestRate", this.nominalAnnualInterestRate);
         map.put("interestCompoundingPeriodType", this.interestCompoundingPeriodType);
         map.put("interestPostingPeriodType", this.interestPostingPeriodType);
         //map.put("transactionProcessingStrategyId", this.transactionProcessingStrategy);
         map.put("accountingRule", this.accountingRule);
+        //map.put("savingsReferenceAccountId", this.savingsReferenceAccountId);
+        //map.put(transfersInSuspenseAccountId, this.transfersInSuspenseAccountId);
+        //map.put(savingsControlAccountId, this.savingsControlAccountId);
+        //map.put(interestOnSavingsAccountId, this.interestOnSavingsAccountId);
+        //map.put(incomeFromFeeAccountId, this.incomeFromFeeAccountId);
+        //map.put(incomeFromPenaltyAccountId, this.incomeFromPenaltyAccountId);
+        map.put("minRequiredOpeningBalance", this.minRequiredOpeningBalance);
+        map.put("lockinPeriodFrequency", this.lockinPeriodFrequency);
+        map.put("lockinPeriodFrequencyType", this.lockinPeriodFrequencyType);
+        map.put("withdrawalFeeForTransfers", this.withdrawalFeeForTransfers);
 
         if (this.accountingRule.equals(ACCURAL_BASED)) {
             map.putAll(getAccountMappingForAccrualBased());
@@ -92,8 +114,8 @@ public class SavingProductTestBuilder {
         return this;
     }
     
-    public SavingProductTestBuilder withInterestPostingPeriodTypeAsAnnually() {
-        this.interestPostingPeriodType = ANNUALLY;
+    public SavingProductTestBuilder withInterestPostingPeriodTypeAsAnnual() {
+        this.interestPostingPeriodType = ANNUAL;
         return this;
     }
     
@@ -129,12 +151,12 @@ public class SavingProductTestBuilder {
         for (int i = 0; i < this.accountList.length; i++) {
             if (this.accountList[i].getAccountType().equals(Account.AccountType.ASSET)) {
                 final String ID = this.accountList[i].getAccountID().toString();
-                map.put("savingReferenceAccountId", ID);
+                map.put("savingsReferenceAccountId", ID);
             }
             if (this.accountList[i].getAccountType().equals(Account.AccountType.LIABILITY)) {
                 final String ID = this.accountList[i].getAccountID().toString();
                 map.put("savingControlAccountId", ID);
-                map.put("savingTransfersInSuspenseAccountId", ID);
+                map.put("transfersInSuspenseAccountId", ID);
             }
             if (this.accountList[i].getAccountType().equals(Account.AccountType.EXPENSE)) {
                 final String ID = this.accountList[i].getAccountID().toString();
@@ -155,7 +177,6 @@ public class SavingProductTestBuilder {
             if (this.accountList[i].getAccountType().equals(Account.AccountType.ASSET)) {
                 final String ID = this.accountList[i].getAccountID().toString();
                 map.put("savingReferenceAccountId", ID);
-
             }
             if (this.accountList[i].getAccountType().equals(Account.AccountType.INCOME)) {
                 final String ID = this.accountList[i].getAccountID().toString();

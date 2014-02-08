@@ -18,6 +18,7 @@ public class SavingTransactionHelper {
     private final ResponseSpecification responseSpec;
 
     private static final String CREATE_SAVING_PRODUCT_URL = "/mifosng-provider/api/v1/savingsproducts?tenantIdentifier=default";
+    private static final String APPLY_SAVING_URL = "/mifosng-provider/api/v1/savingsaccounts?tenantIdentifier=default";
 
     public SavingTransactionHelper(final RequestSpecification requestSpec, final ResponseSpecification responseSpec) {
         this.requestSpec = requestSpec;
@@ -26,5 +27,9 @@ public class SavingTransactionHelper {
 
     public Integer getSavingProductId(final String savingProductJSON) {
         return Utils.performServerPost(this.requestSpec, this.responseSpec, CREATE_SAVING_PRODUCT_URL, savingProductJSON, "resourceId");
+    }
+    
+    public Integer getSavingId(final String savingApplicationJSON) {
+        return Utils.performServerPost(this.requestSpec, this.responseSpec, APPLY_SAVING_URL, savingApplicationJSON, "loanId");
     }
 }

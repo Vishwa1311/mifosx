@@ -10,6 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mifosplatform.integrationtests.common.ClientHelper;
 import org.mifosplatform.integrationtests.common.Utils;
+import org.mifosplatform.integrationtests.common.accounting.Account;
+import org.mifosplatform.integrationtests.common.savings.SavingApplicationTestBuilder;
 //import org.mifosplatform.integrationtests.common.savings.SavingApplicationTestBuilder;
 import org.mifosplatform.integrationtests.common.savings.SavingProductTestBuilder;
 import org.mifosplatform.integrationtests.common.savings.SavingTransactionHelper;
@@ -42,35 +44,25 @@ public class ClientSavingIntegrationTest {
         final Integer clientID = ClientHelper.createClient(this.requestSpec, this.responseSpec);
         ClientHelper.verifyClientCreatedOnServer(this.requestSpec, this.responseSpec, clientID);
         final Integer savingProductID = createSavingProduct();
-        //final Integer savingID = applyForSavingApplication(clientID, savingProductID);
+        final Integer savingID = applyForSavingApplication(clientID, savingProductID);
     }
     
     private Integer createSavingProduct() {
         System.out.println("------------------------------CREATING NEW SAVING PRODUCT ---------------------------------------");
+        //Account[] accounts = (Account[]) new ArrayList<Account>().toArray();
         final String savingProductJSON = new SavingProductTestBuilder() //
-                .withInterestCompoundingPeriodTypeAsDaily() //
-                .withInterestPostingPeriodTypeAsMonthly() //
-                .withInterestCalculationPeriodTypeAsDailyBalance() //
+                .withInterestCompoundingPeriodTypeAsMonthly() //
+                .withInterestPostingPeriodTypeAsQuarterly() //
+                .withInterestCalculationPeriodTypeAsAverageDailyBalance() //
                 .build();
         return this.savingTransactionHelper.getSavingProductId(savingProductJSON);
     }
     
-    /*private Integer applyForSavingApplication(final Integer clientID, final Integer loanProductID) {
+    private Integer applyForSavingApplication(final Integer clientID, final Integer savingProductID) {
         System.out.println("--------------------------------APPLYING FOR SAVING APPLICATION--------------------------------");
         final String savingApplicationJSON = new SavingApplicationTestBuilder() //
-                .withPrincipal("12,000.00") //
-                .withLoanTermFrequency("4") //
-                .withLoanTermFrequencyAsMonths() //
-                .withNumberOfRepayments("4") //
-                .withRepaymentEveryAfter("1") //
-                .withRepaymentFrequencyTypeAsMonths() //
-                .withInterestRatePerPeriod("2") //
-                .withAmortizationTypeAsEqualInstallments() //
-                .withInterestTypeAsDecliningBalance() //
-                .withInterestCalculationPeriodTypeSameAsRepaymentPeriod() //
-                .withExpectedDisbursementDate("20 September 2011") //
-                .withSubmittedOnDate("20 September 2011") //
-                .build(clientID.toString(), loanProductID.toString());
+                .withSubmittedOnDate("08 February 2014") //
+                .build(clientID.toString(), savingProductID.toString());
         return this.savingTransactionHelper.getSavingId(savingApplicationJSON);
-    }*/
+    }
 }
