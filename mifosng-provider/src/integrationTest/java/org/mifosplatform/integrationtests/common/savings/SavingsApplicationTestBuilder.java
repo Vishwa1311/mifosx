@@ -7,9 +7,10 @@ import org.mifosplatform.integrationtests.common.accounting.Account;
 
 import com.google.gson.Gson;
 
-public class SavingApplicationTestBuilder {
+@SuppressWarnings("unused")
+public class SavingsApplicationTestBuilder {
 
-	private static final String LOCALE = "en_GB";
+    private static final String LOCALE = "en_GB";
     private static final String DIGITS_AFTER_DECIMAL = "2";
     private static final String IN_MULTIPLES_OF = "0";
     private static final String INR = "INR";
@@ -27,9 +28,8 @@ public class SavingApplicationTestBuilder {
     private static final String DAYS_365 = "365";
     private static final String NONE = "1";
     private static final String CASH_BASED = "2";
-    private static final String ACCURAL_BASED = "3";
 
-    private String nameOfSavingProduct = ClientHelper.randomNameGenerator("SAVING_PRODUCT_", 6);
+    private String nameOfSavingsProduct = ClientHelper.randomNameGenerator("SAVINGS_PRODUCT_", 6);
     private String shortName = ClientHelper.randomNameGenerator("", 4);
     private String description = ClientHelper.randomNameGenerator("", 20);
     private String interestCompoundingPeriodType = "1";
@@ -42,27 +42,29 @@ public class SavingApplicationTestBuilder {
     private final String interestCalculationDaysInYearType = DAYS_365;
     private Account[] accountList = null;
 
-    public String build(final String ID, final String savingProductId) {
+    public String build(final String ID, final String savingsProductId) {
 
         final HashMap<String, String> map = new HashMap<String, String>();
         map.put("dateFormat", "dd MMMM yyyy");
         map.put("locale", "en_GB");
         map.put("clientId", ID);
-        map.put("productId", savingProductId);
+        map.put("productId", savingsProductId);
         map.put("interestCalculationDaysInYearType", this.interestCalculationDaysInYearType);
         map.put("locale", LOCALE);
-        //map.put("digitsAfterDecimal", DIGITS_AFTER_DECIMAL);
-        //map.put("inMultiplesOf", IN_MULTIPLES_OF);
+        // map.put("digitsAfterDecimal", DIGITS_AFTER_DECIMAL);
+        // map.put("inMultiplesOf", IN_MULTIPLES_OF);
         map.put("interestCalculationType", INTEREST_CALCULATION_USING_AVERAGE_DAILY_BALANCE);
         map.put("nominalAnnualInterestRate", this.nominalAnnualInterestRate);
         map.put("interestCompoundingPeriodType", this.interestCompoundingPeriodType);
         map.put("interestPostingPeriodType", this.interestPostingPeriodType);
         map.put("submittedOnDate", this.submittedOnDate);
-        return new Gson().toJson(map);
+        String savingsApplicationJSON = new Gson().toJson(map);
+        System.out.println(savingsApplicationJSON);
+        return savingsApplicationJSON;
     }
 
-    public SavingApplicationTestBuilder withSubmittedOnDate(final String savingApplicationSubmittedDate) {
-        this.submittedOnDate = savingApplicationSubmittedDate;
+    public SavingsApplicationTestBuilder withSubmittedOnDate(final String savingsApplicationSubmittedDate) {
+        this.submittedOnDate = savingsApplicationSubmittedDate;
         return this;
     }
 }
