@@ -20,7 +20,8 @@ public enum ChargeTimeType {
     INSTALMENT_FEE(8, "chargeTimeType.instalmentFee"), // only for loan charges
     OVERDUE_INSTALLMENT(9, "chargeTimeType.overdueInstallment"), // only for
                                                                  // loan charges
-    OVERDRAFT_FEE(10, "chargeTimeType.overdraftFee");// only for savings
+    OVERDRAFT_FEE(10, "chargeTimeType.overdraftFee"),// only for savings
+    DEPOSIT_CHARGE(11, "chargeTimeType.depositCharge"); // only for savings
 
     private final Integer value;
     private final String code;
@@ -51,7 +52,7 @@ public enum ChargeTimeType {
     public static Object[] validSavingsValues() {
         return new Integer[] { ChargeTimeType.SPECIFIED_DUE_DATE.getValue(), ChargeTimeType.SAVINGS_ACTIVATION.getValue(),
                 ChargeTimeType.SAVINGS_CLOSURE.getValue(), ChargeTimeType.WITHDRAWAL_FEE.getValue(), ChargeTimeType.ANNUAL_FEE.getValue(),
-                ChargeTimeType.MONTHLY_FEE.getValue(), ChargeTimeType.OVERDRAFT_FEE.getValue() };
+                ChargeTimeType.MONTHLY_FEE.getValue(), ChargeTimeType.OVERDRAFT_FEE.getValue(), ChargeTimeType.DEPOSIT_CHARGE.getValue() };
     }
 
     public static ChargeTimeType fromInt(final Integer chargeTime) {
@@ -87,6 +88,9 @@ public enum ChargeTimeType {
                 break;
                 case 10:
                     chargeTimeType = OVERDRAFT_FEE;
+                break;
+                case 11:
+                    chargeTimeType = DEPOSIT_CHARGE;
                 break;
                 default:
                     chargeTimeType = INVALID;
@@ -131,6 +135,10 @@ public enum ChargeTimeType {
     public boolean isOverdueInstallment() {
         return this.value.equals(ChargeTimeType.OVERDUE_INSTALLMENT.getValue());
     }
+    
+    public boolean isDepositCharge() {
+        return this.value.equals(ChargeTimeType.DEPOSIT_CHARGE.getValue());
+    }
 
     public boolean isAllowedLoanChargeTime() {
         return isTimeOfDisbursement() || isOnSpecifiedDueDate() || isInstalmentFee() || isOverdueInstallment();
@@ -138,7 +146,7 @@ public enum ChargeTimeType {
 
     public boolean isAllowedSavingsChargeTime() {
         return isOnSpecifiedDueDate() || isSavingsActivation() || isSavingsClosure() || isWithdrawalFee() || isAnnualFee()
-                || isMonthlyFee() || isOverdraftFee();
+                || isMonthlyFee() || isOverdraftFee() || isDepositCharge();
     }
 
     public boolean isOverdraftFee() {

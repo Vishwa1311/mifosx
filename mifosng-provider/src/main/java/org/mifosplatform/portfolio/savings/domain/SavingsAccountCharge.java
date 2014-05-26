@@ -627,6 +627,10 @@ public class SavingsAccountCharge extends AbstractPersistable<Long> {
     public boolean isMonthlyFee() {
         return ChargeTimeType.fromInt(this.chargeTime).isMonthlyFee();
     }
+    
+    public boolean isDepositCharge() {
+        return ChargeTimeType.fromInt(this.chargeTime).isDepositCharge();
+    }
 
     public boolean hasCurrencyCodeOf(final String matchingCurrencyCode) {
         if (this.currencyCode() == null || matchingCurrencyCode == null) { return false; }
