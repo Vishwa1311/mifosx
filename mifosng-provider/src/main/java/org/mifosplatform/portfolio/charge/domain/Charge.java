@@ -7,17 +7,23 @@ package org.mifosplatform.portfolio.charge.domain;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.joda.time.MonthDay;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.ApiParameterError;
@@ -85,6 +91,13 @@ public class Charge extends AbstractPersistable<Long> {
     @Column(name = "fee_frequency", nullable = true)
     private Integer feeFrequency;
 
+    @Column(name = "applicable_to_all_products", nullable = false)
+    private boolean applicableToAllProducts = false;
+
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "charge", orphanRemoval = true)
+    private Set<PaymentTypeCharge> paymentTypeCharges = new HashSet<PaymentTypeCharge>();
+
     public static Charge fromJson(final JsonCommand command) {
 
         final String name = command.stringValueOfParameterNamed("name");
@@ -106,9 +119,10 @@ public class Charge extends AbstractPersistable<Long> {
         final BigDecimal minCap = command.bigDecimalValueOfParameterNamed("minCap");
         final BigDecimal maxCap = command.bigDecimalValueOfParameterNamed("maxCap");
         final Integer feeFrequency = command.integerValueOfParameterNamed("feeFrequency");
+        final boolean applicableToAllProducts = command.booleanPrimitiveValueOfParameterNamed("applicableToAllProducts");
 
         return new Charge(name, amount, currencyCode, chargeAppliesTo, chargeTimeType, chargeCalculationType, penalty, active, paymentMode,
-                feeOnMonthDay, feeInterval, minCap, maxCap, feeFrequency);
+                feeOnMonthDay, feeInterval, minCap, maxCap, feeFrequency, applicableToAllProducts);
     }
 
     protected Charge() {
@@ -118,7 +132,7 @@ public class Charge extends AbstractPersistable<Long> {
     private Charge(final String name, final BigDecimal amount, final String currencyCode, final ChargeAppliesTo chargeAppliesTo,
             final ChargeTimeType chargeTime, final ChargeCalculationType chargeCalculationType, final boolean penalty,
             final boolean active, final ChargePaymentMode paymentMode, final MonthDay feeOnMonthDay, final Integer feeInterval,
-            final BigDecimal minCap, final BigDecimal maxCap, final Integer feeFrequency) {
+            final BigDecimal minCap, final BigDecimal maxCap, final Integer feeFrequency, final boolean applicableToAllProducts) {
         this.name = name;
         this.amount = amount;
         this.currencyCode = currencyCode;
@@ -151,7 +165,7 @@ public class Charge extends AbstractPersistable<Long> {
                         .failWithCodeNoParameterAddedToErrorCode("not.allowed.charge.calculation.type.for.savings");
             }
 
-            if (!ChargeTimeType.fromInt(getChargeTime()).isWithdrawalFee()
+            if (!(ChargeTimeType.fromInt(getChargeTime()).isWithdrawalFee() || ChargeTimeType.fromInt(getChargeTime()).isDepositFee())
                     && ChargeCalculationType.fromInt(getChargeCalculation()).isPercentageOfAmount()) {
                 baseDataValidator.reset().parameter("chargeCalculationType").value(this.chargeCalculation)
                         .failWithCodeNoParameterAddedToErrorCode("savings.charge.calculation.type.percentage.allowed.only.for.withdrawal");
@@ -171,6 +185,8 @@ public class Charge extends AbstractPersistable<Long> {
             this.maxCap = maxCap;
         }
 
+        this.applicableToAllProducts = applicableToAllProducts;
+        
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException(dataValidationErrors); }
     }
 
@@ -256,14 +272,11 @@ public class Charge extends AbstractPersistable<Long> {
         return this.maxCap;
     }
 
-    public Map<String, Object> update(final JsonCommand command) {
+    public Map<String, Object> update(final JsonCommand command, final DataValidatorBuilder baseDataValidator) {
 
         final Map<String, Object> actualChanges = new LinkedHashMap<String, Object>(7);
 
         final String localeAsInput = command.locale();
-
-        final List<ApiParameterError> dataValidationErrors = new ArrayList<ApiParameterError>();
-        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("charges");
 
         final String nameParamName = "name";
         if (command.isChangeInStringParameterNamed(nameParamName, this.name)) {
@@ -387,7 +400,7 @@ public class Charge extends AbstractPersistable<Long> {
             actualChanges.put("locale", localeAsInput);
             this.feeInterval = newValue;
         }
-        
+
         final String feeFrequency = "feeFrequency";
         if (command.isChangeInIntegerParameterNamed(feeFrequency, this.feeFrequency)) {
             final Integer newValue = command.integerValueOfParameterNamed(feeFrequency);
@@ -395,8 +408,8 @@ public class Charge extends AbstractPersistable<Long> {
             actualChanges.put("locale", localeAsInput);
             this.feeFrequency = newValue;
         }
-        
-        if(this.feeFrequency != null){
+
+        if (this.feeFrequency != null) {
             baseDataValidator.reset().parameter("feeInterval").value(this.feeInterval).notNull();
         }
 
@@ -434,8 +447,6 @@ public class Charge extends AbstractPersistable<Long> {
         if (this.penalty && ChargeTimeType.fromInt(this.chargeTime).isTimeOfDisbursement()) { throw new ChargeDueAtDisbursementCannotBePenaltyException(
                 this.name); }
         if (!penalty && ChargeTimeType.fromInt(this.chargeTime).isOverdueInstallment()) { throw new ChargeMustBePenaltyException(name); }
-
-        if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException(dataValidationErrors); }
 
         return actualChanges;
     }
@@ -495,4 +506,43 @@ public class Charge extends AbstractPersistable<Long> {
     public Integer feeFrequency() {
         return this.feeFrequency;
     }
+
+    public PaymentTypeCharge findPaymentTypeChargeByPaymentType(final Long paymentTypeId) {
+        PaymentTypeCharge ptCharge = null;
+        for (PaymentTypeCharge existing : paymentTypeCharges()) {
+            if (existing.paymentType().getId() == paymentTypeId) {
+                ptCharge = existing;
+                break;
+            }
+        }
+        return ptCharge;
+    }
+
+    public Set<PaymentTypeCharge> paymentTypeCharges() {
+        Set<PaymentTypeCharge> paymentTypeCharges = null;
+        if (this.paymentTypeCharges == null) {
+            paymentTypeCharges = new HashSet<PaymentTypeCharge>();
+        } else {
+            paymentTypeCharges = this.paymentTypeCharges;
+        }
+
+        return paymentTypeCharges;
+    }
+
+    public void addPaymentTypeCharges(final PaymentTypeCharge newPaymentTypeCharge) {
+        this.paymentTypeCharges().add(newPaymentTypeCharge);
+    }
+
+    public boolean isApplicableToAllProducts() {
+        return this.applicableToAllProducts;
+    }
+
+    public ChargeTimeType chargeTimeType() {
+        return ChargeTimeType.fromInt(this.chargeTime);
+    }
+
+    public ChargeCalculationType chargeCalculationType() {
+        return ChargeCalculationType.fromInt(this.chargeCalculation);
+    }
+
 }

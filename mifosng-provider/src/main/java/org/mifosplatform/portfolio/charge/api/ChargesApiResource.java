@@ -25,16 +25,19 @@ import javax.ws.rs.core.UriInfo;
 import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
+import org.mifosplatform.infrastructure.core.api.ApiParameterHelper;
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.mifosplatform.infrastructure.core.serialization.DefaultToApiJsonSerializer;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.portfolio.charge.data.ChargeData;
+import org.mifosplatform.portfolio.charge.data.PaymentTypeChargeData;
 import org.mifosplatform.portfolio.charge.service.ChargeReadPlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 @Path("/charges")
 @Component
@@ -86,9 +89,30 @@ public class ChargesApiResource {
 
         this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermissions);
 
-        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
-
         ChargeData charge = this.readPlatformService.retrieveCharge(chargeId);
+        
+        final Set<String> mandatoryResponseParameters = new HashSet<String>();
+        final Set<String> associationParameters = ApiParameterHelper.extractAssociationsForResponseIfProvided(uriInfo.getQueryParameters());
+        if (!associationParameters.isEmpty()) {
+            Collection<PaymentTypeChargeData> paymentTypeChargeDatas = null;
+            if (associationParameters.contains("all")) {
+                associationParameters.addAll(Arrays.asList("paymentTypeCharges"));
+            }
+            
+            if (associationParameters.contains("paymentTypeCharges")) {
+                mandatoryResponseParameters.add("paymentTypeCharges");
+                paymentTypeChargeDatas = this.readPlatformService.retrievePaymentTypeCharges(chargeId);
+                if (CollectionUtils.isEmpty(paymentTypeChargeDatas)) {
+                    paymentTypeChargeDatas = null;
+                }
+            }
+            
+            charge = ChargeData.withAssociations(charge, paymentTypeChargeDatas);
+        }
+        
+        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters(),
+                mandatoryResponseParameters);
+        
         if (settings.isTemplate()) {
             final ChargeData templateData = this.readPlatformService.retrieveNewChargeDetails();
             charge = ChargeData.withTemplate(charge, templateData);

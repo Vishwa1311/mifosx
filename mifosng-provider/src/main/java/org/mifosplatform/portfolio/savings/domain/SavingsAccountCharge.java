@@ -104,6 +104,9 @@ public class SavingsAccountCharge extends AbstractPersistable<Long> {
 
     @Column(name = "is_active", nullable = false)
     private boolean status = true;
+    
+    @Column(name = "apply_for_all_products", nullable = false)
+    private boolean applyForAllProducts = false;
 
     public static SavingsAccountCharge createNewFromJson(final SavingsAccount savingsAccount, final Charge chargeDefinition,
             final JsonCommand command) {
@@ -125,6 +128,12 @@ public class SavingsAccountCharge extends AbstractPersistable<Long> {
             final MonthDay feeOnMonthDay, final Integer feeInterval) {
         return new SavingsAccountCharge(null, chargeDefinition, amountPayable, chargeTime, chargeCalculation, dueDate, status,
                 feeOnMonthDay, feeInterval);
+    }
+
+    public static SavingsAccountCharge createFromCharge(final SavingsAccount savingsAccount, final Charge charge) {
+
+        return new SavingsAccountCharge(savingsAccount, charge, charge.getAmount(), charge.chargeTimeType(),
+                charge.chargeCalculationType(), null, charge.isActive(), charge.getFeeOnMonthDay(), charge.feeInterval());
     }
 
     protected SavingsAccountCharge() {
@@ -656,7 +665,7 @@ public class SavingsAccountCharge extends AbstractPersistable<Long> {
                 .toHashCode();
     }
 
-    public BigDecimal updateWithdralFeeAmount(final BigDecimal transactionAmount) {
+    public BigDecimal updateRecurringFeeAmount(final BigDecimal transactionAmount) {
         BigDecimal amountPaybale = BigDecimal.ZERO;
         if (ChargeCalculationType.fromInt(this.chargeCalculation).isFlat()) {
             amountPaybale = this.amount;
@@ -727,5 +736,9 @@ public class SavingsAccountCharge extends AbstractPersistable<Long> {
 
     public boolean feeSettingsSet() {
         return this.feeOnDay != null && this.feeOnMonth != null;
+    }
+
+    public boolean isDepositFee() {
+        return ChargeTimeType.fromInt(this.chargeTime).isDepositFee();
     }
 }
