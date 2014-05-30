@@ -17,5 +17,5 @@ public interface SavingsAccountDomainService {
             BigDecimal transactionAmount, PaymentDetail paymentDetail, boolean applyWithdrawFee, boolean isInterestTransfer);
 
     SavingsAccountTransaction handleDeposit(SavingsAccount account, DateTimeFormatter fmt, LocalDate transactionDate,
-            BigDecimal transactionAmount, PaymentDetail paymentDetail);
+            BigDecimal transactionAmount, PaymentDetail paymentDetail, boolean applyDepositFee);
 }
