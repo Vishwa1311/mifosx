@@ -720,16 +720,16 @@ public class SavingsAccount extends AbstractPersistable<Long> {
 
         if (applyWithdrawFee) {
             // auto pay withdrawal fee
-            payWithdrawalFee(transactionDTO.getTransactionAmount(), transactionDTO.getTransactionDate());
+            payWithdrawalFee(transactionDTO.getTransactionAmount(), transactionDTO.getTransactionDate(), transaction);
         }
         return transaction;
     }
 
-    private void payWithdrawalFee(final BigDecimal transactionAmoount, final LocalDate transactionDate) {
+    private void payWithdrawalFee(final BigDecimal transactionAmoount, final LocalDate transactionDate, final SavingsAccountTransaction parent) {
         for (SavingsAccountCharge charge : this.charges()) {
             if (charge.isWithdrawalFee()) {
                 charge.updateWithdralFeeAmount(transactionAmoount);
-                this.payCharge(charge, charge.getAmountOutstanding(this.getCurrency()), transactionDate);
+                this.payCharge(charge, charge.getAmountOutstanding(this.getCurrency()), transactionDate, parent);
             }
         }
     }
@@ -1590,9 +1590,10 @@ public class SavingsAccount extends AbstractPersistable<Long> {
     }
 
     private void payActivationCharges() {
+        final SavingsAccountTransaction parent = null;
         for (SavingsAccountCharge savingsAccountCharge : this.charges()) {
             if (savingsAccountCharge.isSavingsActivation()) {
-                payCharge(savingsAccountCharge, savingsAccountCharge.getAmountOutstanding(getCurrency()), getActivationLocalDate());
+                payCharge(savingsAccountCharge, savingsAccountCharge.getAmountOutstanding(getCurrency()), getActivationLocalDate(), parent);
             }
         }
     }
@@ -1838,12 +1839,12 @@ public class SavingsAccount extends AbstractPersistable<Long> {
         }
 
         // Only one withdrawal fee is supported per account
-        if (savingsAccountCharge.isWithdrawalFee()) {
+        /*if (savingsAccountCharge.isWithdrawalFee()) {
             if (this.isWithDrawalFeeExists()) {
                 baseDataValidator.reset().failWithCodeNoParameterAddedToErrorCode("multiple.withdrawal.fee.per.account.not.supported");
                 throw new PlatformApiDataValidationException(dataValidationErrors);
             }
-        }
+        }*/
 
         // Only one annual fee is supported per account
         if (savingsAccountCharge.isAnnualFee()) {
@@ -1873,12 +1874,12 @@ public class SavingsAccount extends AbstractPersistable<Long> {
 
     }
 
-    private boolean isWithDrawalFeeExists() {
+    /*private boolean isWithDrawalFeeExists() {
         for (SavingsAccountCharge charge : this.charges()) {
             if (charge.isWithdrawalFee()) return true;
         }
         return false;
-    }
+    }*/
 
     private boolean isAnnualFeeExists() {
         for (SavingsAccountCharge charge : this.charges()) {
@@ -1888,7 +1889,7 @@ public class SavingsAccount extends AbstractPersistable<Long> {
     }
 
     public void payCharge(final SavingsAccountCharge savingsAccountCharge, final BigDecimal amountPaid, final LocalDate transactionDate,
-            final DateTimeFormatter formatter) {
+            final DateTimeFormatter formatter, final SavingsAccountTransaction parent) {
 
         final List<ApiParameterError> dataValidationErrors = new ArrayList<ApiParameterError>();
         final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
@@ -1958,24 +1959,29 @@ public class SavingsAccount extends AbstractPersistable<Long> {
             if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException(dataValidationErrors); }
         }
 
-        this.payCharge(savingsAccountCharge, chargePaid, transactionDate);
+        this.payCharge(savingsAccountCharge, chargePaid, transactionDate, parent);
     }
 
-    public void payCharge(final SavingsAccountCharge savingsAccountCharge, final Money amountPaid, final LocalDate transactionDate) {
+    public void payCharge(final SavingsAccountCharge savingsAccountCharge, final Money amountPaid, final LocalDate transactionDate, final SavingsAccountTransaction parent) {
         savingsAccountCharge.pay(getCurrency(), amountPaid);
-        handlePayChargeTransactions(savingsAccountCharge, amountPaid, transactionDate);
+        handlePayChargeTransactions(savingsAccountCharge, amountPaid, transactionDate, parent);
     }
 
     private void handlePayChargeTransactions(SavingsAccountCharge savingsAccountCharge, Money transactionAmount,
-            final LocalDate transactionDate) {
+            final LocalDate transactionDate, final SavingsAccountTransaction parent) {
         SavingsAccountTransaction chargeTransaction = null;
 
         if (savingsAccountCharge.isWithdrawalFee()) {
-            chargeTransaction = SavingsAccountTransaction.withdrawalFee(this, office(), transactionDate, transactionAmount);
+            chargeTransaction = SavingsAccountTransaction.withdrawalFee(this, office(), transactionDate, transactionAmount, parent);
         } else if (savingsAccountCharge.isAnnualFee()) {
-            chargeTransaction = SavingsAccountTransaction.annualFee(this, office(), transactionDate, transactionAmount);
+            chargeTransaction = SavingsAccountTransaction.annualFee(this, office(), transactionDate, transactionAmount, parent);
         } else {
-            chargeTransaction = SavingsAccountTransaction.charge(this, office(), transactionDate, transactionAmount);
+            chargeTransaction = SavingsAccountTransaction.charge(this, office(), transactionDate, transactionAmount, parent);
+        }
+        
+        //link charge transaction with parent transaction
+        if(parent != null){
+            
         }
 
         handleChargeTransactions(savingsAccountCharge, chargeTransaction);

@@ -7,17 +7,23 @@ package org.mifosplatform.portfolio.charge.domain;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.joda.time.MonthDay;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.ApiParameterError;
@@ -84,6 +90,10 @@ public class Charge extends AbstractPersistable<Long> {
 
     @Column(name = "fee_frequency", nullable = true)
     private Integer feeFrequency;
+    
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "charge", orphanRemoval = true)
+    private Set<PaymentTypeCharge> paymentTypeCharges = new HashSet<PaymentTypeCharge>();
 
     public static Charge fromJson(final JsonCommand command) {
 
@@ -256,14 +266,11 @@ public class Charge extends AbstractPersistable<Long> {
         return this.maxCap;
     }
 
-    public Map<String, Object> update(final JsonCommand command) {
+    public Map<String, Object> update(final JsonCommand command, final DataValidatorBuilder baseDataValidator) {
 
         final Map<String, Object> actualChanges = new LinkedHashMap<String, Object>(7);
 
         final String localeAsInput = command.locale();
-
-        final List<ApiParameterError> dataValidationErrors = new ArrayList<ApiParameterError>();
-        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("charges");
 
         final String nameParamName = "name";
         if (command.isChangeInStringParameterNamed(nameParamName, this.name)) {
@@ -435,8 +442,6 @@ public class Charge extends AbstractPersistable<Long> {
                 this.name); }
         if (!penalty && ChargeTimeType.fromInt(this.chargeTime).isOverdueInstallment()) { throw new ChargeMustBePenaltyException(name); }
 
-        if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException(dataValidationErrors); }
-
         return actualChanges;
     }
 
@@ -494,5 +499,31 @@ public class Charge extends AbstractPersistable<Long> {
 
     public Integer feeFrequency() {
         return this.feeFrequency;
+    }
+    
+    public PaymentTypeCharge findPaymentTypeChargeByPaymentType(final Long paymentTypeId) {
+        PaymentTypeCharge ptCharge = null; 
+        for (PaymentTypeCharge existing : paymentTypeCharges()) {
+            if(existing.paymentType().getId() == paymentTypeId) {
+                ptCharge = existing;
+                break;
+            }
+        }
+        return ptCharge;
+    }
+    
+    public Set<PaymentTypeCharge> paymentTypeCharges(){
+        Set<PaymentTypeCharge> paymentTypeCharges = null;
+        if (this.paymentTypeCharges == null) {
+            paymentTypeCharges = new HashSet<PaymentTypeCharge>();
+        }else{
+            paymentTypeCharges = this.paymentTypeCharges;
+        }
+        
+        return paymentTypeCharges;
+    }
+
+    public void addPaymentTypeCharges(final PaymentTypeCharge newPaymentTypeCharge) {
+        this.paymentTypeCharges().add(newPaymentTypeCharge);        
     }
 }

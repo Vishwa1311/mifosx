@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -372,13 +373,22 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
         // undoing transaction is withdrawal then undo withdrawal fee
         // transaction if any
-        if (savingsAccountTransaction.isWithdrawal()) {
+        /*if (savingsAccountTransaction.isWithdrawal()) {
             final SavingsAccountTransaction nextSavingsAccountTransaction = this.savingsAccountTransactionRepository
                     .findOneByIdAndSavingsAccountId(transactionId + 1, savingsId);
             if (nextSavingsAccountTransaction != null && nextSavingsAccountTransaction.isWithdrawalFeeAndNotReversed()) {
                 account.undoTransaction(transactionId + 1);
             }
+        }*/
+        
+        //undo all linked transactions
+        final Collection<SavingsAccountTransaction> children = savingsAccountTransaction.children();
+        if(children != null && !children.isEmpty()){
+            for (SavingsAccountTransaction child : children) {
+                account.undoTransaction(child.getId());
+            }
         }
+        
         boolean isInterestTransfer = false;
         checkClientOrGroupActive(account);
         if (savingsAccountTransaction.isPostInterestCalculationRequired()
@@ -855,7 +865,8 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
         final Set<Long> existingTransactionIds = new HashSet<Long>();
         final Set<Long> existingReversedTransactionIds = new HashSet<Long>();
         updateExistingTransactionsDetails(account, existingTransactionIds, existingReversedTransactionIds);
-        account.payCharge(savingsAccountCharge, amountPaid, transactionDate, formatter);
+        final SavingsAccountTransaction parent = null;
+        account.payCharge(savingsAccountCharge, amountPaid, transactionDate, formatter, parent);
         boolean isInterestTransfer = false;
         final MathContext mc = MathContext.DECIMAL64;
         if (account.isBeforeLastPostingPeriod(transactionDate)) {

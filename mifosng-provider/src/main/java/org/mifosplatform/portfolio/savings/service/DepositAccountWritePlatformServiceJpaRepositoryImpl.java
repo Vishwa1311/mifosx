@@ -1096,7 +1096,6 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 savingsAccountChargeId, accountId);
 
         final DateTimeFormatter fmt = DateTimeFormat.forPattern("dd MM yyyy");
-
         while (transactionDate.isAfter(savingsAccountCharge.getDueLocalDate())) {
             payCharge(savingsAccountCharge, transactionDate, savingsAccountCharge.amoutOutstanding(), fmt);
         }
@@ -1111,7 +1110,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         final Set<Long> existingTransactionIds = new HashSet<Long>();
         final Set<Long> existingReversedTransactionIds = new HashSet<Long>();
         updateExistingTransactionsDetails(account, existingTransactionIds, existingReversedTransactionIds);
-        account.payCharge(savingsAccountCharge, amountPaid, transactionDate, formatter);
+        final SavingsAccountTransaction parent = null;
+        account.payCharge(savingsAccountCharge, amountPaid, transactionDate, formatter, parent);
         boolean isInterestTransfer = false;
         final MathContext mc = MathContext.DECIMAL64;
         if (account.isBeforeLastPostingPeriod(transactionDate)) {

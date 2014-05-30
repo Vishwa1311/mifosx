@@ -728,4 +728,8 @@ public class SavingsAccountCharge extends AbstractPersistable<Long> {
     public boolean feeSettingsSet() {
         return this.feeOnDay != null && this.feeOnMonth != null;
     }
+    
+    public boolean isDepositCharge() {
+        return ChargeTimeType.fromInt(this.chargeTime).isDepositCharge();
+    }
 }
