@@ -8,6 +8,7 @@ package org.mifosplatform.portfolio.charge.service;
 import java.util.Collection;
 
 import org.mifosplatform.portfolio.charge.data.ChargeData;
+import org.mifosplatform.portfolio.charge.data.ChargePaymentTypeData;
 
 public interface ChargeReadPlatformService {
 
@@ -30,4 +31,6 @@ public interface ChargeReadPlatformService {
     Collection<ChargeData> retrieveSavingsProductCharges(Long savingsProductId);
 
     Collection<ChargeData> retrieveLoanProductCharges(Long loanProductId, Integer chargeTime);
+
+    ChargePaymentTypeData retrievePaymentTypeCharge(Long chargeId);
 }

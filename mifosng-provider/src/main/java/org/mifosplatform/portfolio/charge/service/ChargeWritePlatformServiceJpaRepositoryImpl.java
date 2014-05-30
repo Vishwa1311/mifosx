@@ -5,17 +5,26 @@
  */
 package org.mifosplatform.portfolio.charge.service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.mifosplatform.infrastructure.codes.domain.CodeValue;
+import org.mifosplatform.infrastructure.codes.domain.CodeValueRepositoryWrapper;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
+import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.portfolio.charge.domain.Charge;
+import org.mifosplatform.portfolio.charge.domain.ChargeCalculationType;
+import org.mifosplatform.portfolio.charge.domain.ChargePaymentType;
+import org.mifosplatform.portfolio.charge.domain.ChargePaymentTypeRepository;
 import org.mifosplatform.portfolio.charge.domain.ChargeRepository;
 import org.mifosplatform.portfolio.charge.exception.ChargeCannotBeDeletedException;
 import org.mifosplatform.portfolio.charge.exception.ChargeCannotBeUpdatedException;
@@ -32,6 +41,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 @Service
 public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWritePlatformService {
 
@@ -42,15 +55,23 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
     private final DataSource dataSource;
     private final ChargeRepository chargeRepository;
     private final LoanProductRepository loanProductRepository;
+    private final ChargePaymentTypeRepository chargePaymentTypeRepository;
+    private final CodeValueRepositoryWrapper codeValueRepositoryWrapper;
+    private final FromJsonHelper fromApiJsonHelper;
 
     @Autowired
     public ChargeWritePlatformServiceJpaRepositoryImpl(final ChargeDefinitionCommandFromApiJsonDeserializer fromApiJsonDeserializer,
-            final ChargeRepository chargeRepository, final LoanProductRepository loanProductRepository, final RoutingDataSource dataSource) {
+            final ChargeRepository chargeRepository, final LoanProductRepository loanProductRepository, final RoutingDataSource dataSource,
+            final ChargePaymentTypeRepository chargePaymentTypeRepository, final CodeValueRepositoryWrapper codeValueRepositoryWrapper,
+            final FromJsonHelper fromJsonHelper) {
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.dataSource = dataSource;
         this.jdbcTemplate = new JdbcTemplate(this.dataSource);
         this.chargeRepository = chargeRepository;
         this.loanProductRepository = loanProductRepository;
+        this.chargePaymentTypeRepository = chargePaymentTypeRepository;
+        this.codeValueRepositoryWrapper = codeValueRepositoryWrapper;
+        this.fromApiJsonHelper = fromJsonHelper;
     }
 
     @Transactional
@@ -61,13 +82,43 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
             this.fromApiJsonDeserializer.validateForCreate(command.json());
 
             final Charge charge = Charge.fromJson(command);
+
+            Collection<ChargePaymentType> chargePaymentTypes = getChargePaymentType(charge, command);
+
             this.chargeRepository.save(charge);
+            this.chargePaymentTypeRepository.save(chargePaymentTypes);
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(charge.getId()).build();
         } catch (final DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve);
             return CommandProcessingResult.empty();
         }
+    }
+
+    Collection<ChargePaymentType> getChargePaymentType(Charge charge, JsonCommand command) {
+        final JsonElement element = command.parsedJson();
+        final Locale locale = command.extractLocale();
+        Collection<ChargePaymentType> chargePaymentType = new ArrayList<ChargePaymentType>();
+        if (element.isJsonObject()) {
+            final JsonObject topLevelJsonElement = element.getAsJsonObject();
+            if (topLevelJsonElement.has("chargePaymentTypes") && topLevelJsonElement.get("chargePaymentTypes").isJsonArray()) {
+                final JsonArray array = topLevelJsonElement.get("chargePaymentTypes").getAsJsonArray();
+                for (int i = 0; i < array.size(); i++) {
+                    final JsonObject chargePaymentTypeElement = array.get(i).getAsJsonObject();
+
+                    final Long paymentTypeId = this.fromApiJsonHelper.extractLongNamed("paymentType", chargePaymentTypeElement);
+                    final Integer calculationTypeId = this.fromApiJsonHelper.extractIntegerSansLocaleNamed("chargeCalculationType",
+                            chargePaymentTypeElement);
+                    final BigDecimal amount = this.fromApiJsonHelper.extractBigDecimalNamed("amount", chargePaymentTypeElement, locale);
+                    final ChargeCalculationType chargeCalculationType = ChargeCalculationType.fromInt(calculationTypeId);
+                    final CodeValue paymentType = codeValueRepositoryWrapper.findOneWithNotFoundDetection(paymentTypeId);
+                    ChargePaymentType p = new ChargePaymentType(charge, paymentType, chargeCalculationType, amount);
+                    chargePaymentType.add(p);
+                }
+            }
+        }
+
+        return chargePaymentType;
     }
 
     @Transactional
@@ -96,10 +147,11 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
                     if (isChargeExistWithLoans || isChargeExistWithSavings) { throw new ChargeCannotBeUpdatedException(
                             "error.msg.charge.cannot.be.updated.it.is.used.in.loan", "This charge cannot be updated, it is used in loan"); }
                 }
-            }else if((changes.containsKey("feeFrequency") || changes.containsKey("feeInterval")) && chargeForUpdate.isLoanCharge()){
+            } else if ((changes.containsKey("feeFrequency") || changes.containsKey("feeInterval")) && chargeForUpdate.isLoanCharge()) {
                 final Boolean isChargeExistWithLoans = isAnyLoanProductsAssociateWithThisCharge(chargeId);
                 if (isChargeExistWithLoans) { throw new ChargeCannotBeUpdatedException(
-                        "error.msg.charge.frequency.cannot.be.updated.it.is.used.in.loan", "This charge frequency cannot be updated, it is used in loan"); }
+                        "error.msg.charge.frequency.cannot.be.updated.it.is.used.in.loan",
+                        "This charge frequency cannot be updated, it is used in loan"); }
             }
 
             if (!changes.isEmpty()) {

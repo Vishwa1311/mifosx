@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.joda.time.MonthDay;
+import org.mifosplatform.infrastructure.codes.data.CodeValueData;
+import org.mifosplatform.infrastructure.codes.service.CodeValueReadPlatformService;
 import org.mifosplatform.infrastructure.core.data.EnumOptionData;
 import org.mifosplatform.infrastructure.core.domain.JdbcSupport;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
@@ -19,10 +21,12 @@ import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext
 import org.mifosplatform.organisation.monetary.data.CurrencyData;
 import org.mifosplatform.organisation.monetary.service.CurrencyReadPlatformService;
 import org.mifosplatform.portfolio.charge.data.ChargeData;
+import org.mifosplatform.portfolio.charge.data.ChargePaymentTypeData;
 import org.mifosplatform.portfolio.charge.domain.ChargeAppliesTo;
 import org.mifosplatform.portfolio.charge.exception.ChargeNotFoundException;
 import org.mifosplatform.portfolio.common.service.CommonEnumerations;
 import org.mifosplatform.portfolio.common.service.DropdownReadPlatformService;
+import org.mifosplatform.portfolio.paymentdetail.PaymentDetailConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -38,17 +42,19 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     private final CurrencyReadPlatformService currencyReadPlatformService;
     private final ChargeDropdownReadPlatformService chargeDropdownReadPlatformService;
     private final DropdownReadPlatformService dropdownReadPlatformService;
+    private final CodeValueReadPlatformService codeValueReadPlatformService;
 
     @Autowired
     public ChargeReadPlatformServiceImpl(final PlatformSecurityContext context,
             final CurrencyReadPlatformService currencyReadPlatformService,
             final ChargeDropdownReadPlatformService chargeDropdownReadPlatformService, final RoutingDataSource dataSource,
-            final DropdownReadPlatformService dropdownReadPlatformService) {
+            final DropdownReadPlatformService dropdownReadPlatformService, final CodeValueReadPlatformService codeValueReadPlatformService) {
         this.context = context;
         this.chargeDropdownReadPlatformService = chargeDropdownReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.currencyReadPlatformService = currencyReadPlatformService;
         this.dropdownReadPlatformService = dropdownReadPlatformService;
+        this.codeValueReadPlatformService = codeValueReadPlatformService;
     }
 
     @Override
@@ -96,10 +102,12 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         final List<EnumOptionData> savingsChargeTimeTypeOptions = this.chargeDropdownReadPlatformService
                 .retrieveSavingsCollectionTimeTypes();
         final List<EnumOptionData> feeFrequencyOptions = this.dropdownReadPlatformService.retrievePeriodFrequencyTypeOptions();
+        final Collection<CodeValueData> paymentTypeOptions = this.codeValueReadPlatformService
+                .retrieveCodeValuesByCode(PaymentDetailConstants.paymentTypeCodeName);
 
         return ChargeData.template(currencyOptions, allowedChargeCalculationTypeOptions, allowedChargeAppliesToOptions,
                 allowedChargeTimeOptions, chargePaymentOptions, loansChargeCalculationTypeOptions, loansChargeTimeTypeOptions,
-                savingsChargeCalculationTypeOptions, savingsChargeTimeTypeOptions, feeFrequencyOptions);
+                savingsChargeCalculationTypeOptions, savingsChargeTimeTypeOptions, feeFrequencyOptions, paymentTypeOptions);
     }
 
     @Override
@@ -188,7 +196,7 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         public String savingsProductChargeSchema() {
             return chargeSchema() + " join m_savings_product_charge spc on spc.charge_id = c.id";
         }
-
+        
         @Override
         public ChargeData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
             final Long id = rs.getLong("id");
@@ -255,6 +263,32 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { ChargeAppliesTo.SAVINGS.getValue() });
     }
+    
+    private static final class ChargePaymentTypeMapper implements RowMapper<ChargePaymentTypeData> {
+
+        public String chargePaymentTypeSchema() {
+            return "cpt.payment_type_id as chargePayment, cpt.charge_calculation_type_enum as chargeCalculation, cpt.amount as amount, "
+                    + "from m_charge c m_charge_payment_type cpt";
+        }
+        
+        public String paymentTypeChargeSchema() {
+            return chargePaymentTypeSchema() + " where cpt.charge_id = c.id";
+        }
+
+
+        @Override
+        public ChargePaymentTypeData mapRow(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
+            final int chargePayment = rs.getInt("chargePayment");
+            final CodeValueData paymentType = 
+            
+            final int chargeCalculation = rs.getInt("chargeCalculation");
+            final EnumOptionData chargeCalculationType = ChargeEnumerations.chargeCalculationType(chargeCalculation);
+            
+            final BigDecimal amount = rs.getBigDecimal("amount");
+
+            return ChargePaymentTypeData.instance(amount, chargeCalculationType, paymentType);
+        }
+    }
 
     @Override
     public Collection<ChargeData> retrieveSavingsAccountApplicablePenalties() {
@@ -277,6 +311,21 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
                 + " where c.is_deleted=0 and c.is_active=1 and spc.savings_product_id=?";
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { savingsProductId });
+    }
+    
+    @Override
+    public ChargePaymentTypeData retrievePaymentTypeCharge(final Long chargeId) {
+        try {
+            this.context.authenticatedUser();
+
+            final ChargePaymentTypeMapper rm = new ChargePaymentTypeMapper();
+
+            final String sql = "select " + rm.paymentTypeChargeSchema() + " where c.id = ? and c.is_deleted=0 ";
+
+            return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { chargeId });
+        } catch (final EmptyResultDataAccessException e) {
+            throw new ChargeNotFoundException(chargeId);
+        }
     }
 
 }
