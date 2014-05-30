@@ -110,9 +110,9 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
 
             final Long toSavingsId = command.longValueOfParameterNamed(toAccountIdParamName);
             final SavingsAccount toSavingsAccount = this.savingsAccountAssembler.assembleFrom(toSavingsId);
-
+            final boolean applyDepositFee = fromSavingsAccount.isDepositFeeApplicableForTransfer();
             final SavingsAccountTransaction deposit = this.savingsAccountDomainService.handleDeposit(toSavingsAccount, fmt,
-                    transactionDate, transactionAmount, paymentDetail);
+                    transactionDate, transactionAmount, paymentDetail, applyDepositFee);
 
             final AccountTransferDetails accountTransferDetails = this.accountTransferAssembler.assembleSavingsToSavingsTransfer(command,
                     fromSavingsAccount, toSavingsAccount, withdrawal, deposit);
@@ -154,9 +154,9 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
 
             final Long toSavingsAccountId = command.longValueOfParameterNamed(toAccountIdParamName);
             final SavingsAccount toSavingsAccount = this.savingsAccountAssembler.assembleFrom(toSavingsAccountId);
-
+            final boolean applyDepositFee = toSavingsAccount.isDepositFeeApplicableForTransfer();
             final SavingsAccountTransaction deposit = this.savingsAccountDomainService.handleDeposit(toSavingsAccount, fmt,
-                    transactionDate, transactionAmount, paymentDetail);
+                    transactionDate, transactionAmount, paymentDetail, applyDepositFee);
 
             final AccountTransferDetails accountTransferDetails = this.accountTransferAssembler.assembleLoanToSavingsTransfer(command,
                     fromLoanAccount, toSavingsAccount, deposit, loanRefundTransaction);
@@ -276,7 +276,7 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
             if (accountTransferDetails == null) {
                 if (accountTransferDTO.getFromSavingsAccount() == null) {
                     fromSavingsAccount = this.savingsAccountAssembler.assembleFrom(accountTransferDTO.getFromAccountId());
-                }else{
+                } else {
                     fromSavingsAccount = accountTransferDTO.getFromSavingsAccount();
                 }
                 if (accountTransferDTO.getToSavingsAccount() == null) {
@@ -294,10 +294,10 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
                     accountTransferDTO.getFmt(), accountTransferDTO.getTransactionDate(), accountTransferDTO.getTransactionAmount(),
                     accountTransferDTO.getPaymentDetail(), fromSavingsAccount.isWithdrawalFeeApplicableForTransfer(), AccountTransferType
                             .fromInt(accountTransferDTO.getTransferType()).isInterestTransfer());
-
+            final boolean applyDepositFee = toSavingsAccount.isDepositFeeApplicableForTransfer();
             final SavingsAccountTransaction deposit = this.savingsAccountDomainService.handleDeposit(toSavingsAccount,
                     accountTransferDTO.getFmt(), accountTransferDTO.getTransactionDate(), accountTransferDTO.getTransactionAmount(),
-                    accountTransferDTO.getPaymentDetail());
+                    accountTransferDTO.getPaymentDetail(), applyDepositFee);
 
             accountTransferDetails = this.accountTransferAssembler.assembleSavingsToSavingsTransfer(accountTransferDTO, fromSavingsAccount,
                     toSavingsAccount, withdrawal, deposit);
@@ -333,9 +333,10 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
                         accountTransferDTO.getTxnExternalId());
             }
 
+            final boolean applyDepositFee = toSavingsAccount.isDepositFeeApplicableForTransfer();
             final SavingsAccountTransaction deposit = this.savingsAccountDomainService.handleDeposit(toSavingsAccount,
                     accountTransferDTO.getFmt(), accountTransferDTO.getTransactionDate(), accountTransferDTO.getTransactionAmount(),
-                    accountTransferDTO.getPaymentDetail());
+                    accountTransferDTO.getPaymentDetail(), applyDepositFee);
             accountTransferDetails = this.accountTransferAssembler.assembleLoanToSavingsTransfer(accountTransferDTO, fromLoanAccount,
                     toSavingsAccount, deposit, loanTransaction);
             this.accountTransferDetailRepository.saveAndFlush(accountTransferDetails);

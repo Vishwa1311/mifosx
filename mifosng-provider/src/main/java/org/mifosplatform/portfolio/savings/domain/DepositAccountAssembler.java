@@ -36,6 +36,7 @@ import static org.mifosplatform.portfolio.savings.SavingsApiConstants.nominalAnn
 import static org.mifosplatform.portfolio.savings.SavingsApiConstants.productIdParamName;
 import static org.mifosplatform.portfolio.savings.SavingsApiConstants.submittedOnDateParamName;
 import static org.mifosplatform.portfolio.savings.SavingsApiConstants.withdrawalFeeForTransfersParamName;
+import static org.mifosplatform.portfolio.savings.SavingsApiConstants.depositFeeForTransfersParamName;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -254,6 +255,11 @@ public class DepositAccountAssembler {
             iswithdrawalFeeApplicableForTransfer = command.booleanPrimitiveValueOfParameterNamed(withdrawalFeeForTransfersParamName);
         }
 
+        boolean isDepositFeeApplicableForTransfer = false;
+        if (command.parameterExists(depositFeeForTransfersParamName)) {
+            isDepositFeeApplicableForTransfer = command.booleanPrimitiveValueOfParameterNamed(depositFeeForTransfersParamName);
+        }
+
         final Set<SavingsAccountCharge> charges = this.savingsAccountChargeAssembler.fromParsedJson(element, product.currency().getCode());
 
         DepositAccountInterestRateChart accountChart = null;
@@ -280,8 +286,8 @@ public class DepositAccountAssembler {
             FixedDepositAccount fdAccount = FixedDepositAccount.createNewApplicationForSubmittal(client, group, product, fieldOfficer,
                     accountNo, externalId, accountType, submittedOnDate, submittedBy, interestRate, interestCompoundingPeriodType,
                     interestPostingPeriodType, interestCalculationType, interestCalculationDaysInYearType, minRequiredOpeningBalance,
-                    lockinPeriodFrequencyTypeValue, lockinPeriodFrequencyType, iswithdrawalFeeApplicableForTransfer, charges,
-                    accountTermAndPreClosure, accountChart);
+                    lockinPeriodFrequencyTypeValue, lockinPeriodFrequencyType, iswithdrawalFeeApplicableForTransfer,
+                    isDepositFeeApplicableForTransfer, charges, accountTermAndPreClosure, accountChart);
             accountTermAndPreClosure.updateAccountReference(fdAccount);
             fdAccount.validateDomainRules();
             account = fdAccount;
@@ -299,7 +305,8 @@ public class DepositAccountAssembler {
                     fieldOfficer, accountNo, externalId, accountType, submittedOnDate, submittedBy, interestRate,
                     interestCompoundingPeriodType, interestPostingPeriodType, interestCalculationType, interestCalculationDaysInYearType,
                     minRequiredOpeningBalance, lockinPeriodFrequencyTypeValue, lockinPeriodFrequencyType,
-                    iswithdrawalFeeApplicableForTransfer, charges, accountTermAndPreClosure, accountRecurringDetail, accountChart);
+                    iswithdrawalFeeApplicableForTransfer, isDepositFeeApplicableForTransfer, charges, accountTermAndPreClosure,
+                    accountRecurringDetail, accountChart);
 
             accountTermAndPreClosure.updateAccountReference(rdAccount);
             accountRecurringDetail.updateAccountReference(rdAccount);
@@ -401,8 +408,8 @@ public class DepositAccountAssembler {
                 depositRecurringDetail, null, isCalendarInherited);
         return depositAccountRecurringDetail;
     }
-    
-    public Collection<SavingsAccountTransactionDTO> assembleBulkMandatorySavingsAccountTransactionDTOs(final JsonCommand command){
+
+    public Collection<SavingsAccountTransactionDTO> assembleBulkMandatorySavingsAccountTransactionDTOs(final JsonCommand command) {
         final String json = command.json();
         if (StringUtils.isBlank(json)) { throw new InvalidJsonException(); }
         final JsonElement element = this.fromApiJsonHelper.parse(json);
@@ -413,7 +420,7 @@ public class DepositAccountAssembler {
         final JsonObject topLevelJsonElement = element.getAsJsonObject();
         final Locale locale = this.fromApiJsonHelper.extractLocaleParameter(topLevelJsonElement);
         final DateTimeFormatter formatter = DateTimeFormat.forPattern(dateFormat).withLocale(locale);
-        
+
         if (element.isJsonObject()) {
             if (topLevelJsonElement.has(bulkSavingsDueTransactionsParamName)
                     && topLevelJsonElement.get(bulkSavingsDueTransactionsParamName).isJsonArray()) {
@@ -424,12 +431,13 @@ public class DepositAccountAssembler {
                     final Long savingsId = this.fromApiJsonHelper.extractLongNamed(savingsIdParamName, savingsTransactionElement);
                     final BigDecimal dueAmount = this.fromApiJsonHelper.extractBigDecimalNamed(transactionAmountParamName,
                             savingsTransactionElement, locale);
-                    final SavingsAccountTransactionDTO savingsAccountTransactionDTO = new SavingsAccountTransactionDTO(formatter, transactionDate, dueAmount, paymentDetail, new Date(), savingsId);
+                    final SavingsAccountTransactionDTO savingsAccountTransactionDTO = new SavingsAccountTransactionDTO(formatter,
+                            transactionDate, dueAmount, paymentDetail, new Date(), savingsId);
                     savingsAccountTransactions.add(savingsAccountTransactionDTO);
                 }
             }
         }
-        
+
         return savingsAccountTransactions;
     }
 }

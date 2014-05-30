@@ -81,7 +81,7 @@ public class FixedDepositAccount extends SavingsAccount {
             final SavingsPostingInterestPeriodType interestPostingPeriodType, final SavingsInterestCalculationType interestCalculationType,
             final SavingsInterestCalculationDaysInYearType interestCalculationDaysInYearType, final BigDecimal minRequiredOpeningBalance,
             final Integer lockinPeriodFrequency, final SavingsPeriodFrequencyType lockinPeriodFrequencyType,
-            final boolean withdrawalFeeApplicableForTransfer, final Set<SavingsAccountCharge> savingsAccountCharges,
+            final boolean withdrawalFeeApplicableForTransfer, final boolean depositFeeApplicableForTransfer, final Set<SavingsAccountCharge> savingsAccountCharges,
             final DepositAccountTermAndPreClosure accountTermAndPreClosure, final DepositAccountInterestRateChart chart) {
 
         final SavingsAccountStatusType status = SavingsAccountStatusType.SUBMITTED_AND_PENDING_APPROVAL;
@@ -90,7 +90,7 @@ public class FixedDepositAccount extends SavingsAccount {
         FixedDepositAccount account = new FixedDepositAccount(client, group, product, fieldOfficer, accountNo, externalId, status,
                 accountType, submittedOnDate, submittedBy, interestRate, interestCompoundingPeriodType, interestPostingPeriodType,
                 interestCalculationType, interestCalculationDaysInYearType, minRequiredOpeningBalance, lockinPeriodFrequency,
-                lockinPeriodFrequencyType, withdrawalFeeApplicableForTransfer, savingsAccountCharges, accountTermAndPreClosure, chart,
+                lockinPeriodFrequencyType, withdrawalFeeApplicableForTransfer, depositFeeApplicableForTransfer, savingsAccountCharges, accountTermAndPreClosure, chart,
                 allowOverdraft, overdraftLimit);
 
         return account;
@@ -103,14 +103,14 @@ public class FixedDepositAccount extends SavingsAccount {
             final SavingsPostingInterestPeriodType interestPostingPeriodType, final SavingsInterestCalculationType interestCalculationType,
             final SavingsInterestCalculationDaysInYearType interestCalculationDaysInYearType, final BigDecimal minRequiredOpeningBalance,
             final Integer lockinPeriodFrequency, final SavingsPeriodFrequencyType lockinPeriodFrequencyType,
-            final boolean withdrawalFeeApplicableForTransfer, final Set<SavingsAccountCharge> savingsAccountCharges,
-            final DepositAccountTermAndPreClosure accountTermAndPreClosure, DepositAccountInterestRateChart chart,
-            final boolean allowOverdraft, final BigDecimal overdraftLimit) {
+            final boolean withdrawalFeeApplicableForTransfer, final boolean depositFeeApplicableForTransfer,
+            final Set<SavingsAccountCharge> savingsAccountCharges, final DepositAccountTermAndPreClosure accountTermAndPreClosure,
+            DepositAccountInterestRateChart chart, final boolean allowOverdraft, final BigDecimal overdraftLimit) {
 
         super(client, group, product, fieldOfficer, accountNo, externalId, status, accountType, submittedOnDate, submittedBy,
                 nominalAnnualInterestRate, interestCompoundingPeriodType, interestPostingPeriodType, interestCalculationType,
                 interestCalculationDaysInYearType, minRequiredOpeningBalance, lockinPeriodFrequency, lockinPeriodFrequencyType,
-                withdrawalFeeApplicableForTransfer, savingsAccountCharges, allowOverdraft, overdraftLimit);
+                withdrawalFeeApplicableForTransfer, depositFeeApplicableForTransfer, savingsAccountCharges, allowOverdraft, overdraftLimit);
 
         this.accountTermAndPreClosure = accountTermAndPreClosure;
         this.chart = chart;
@@ -292,8 +292,8 @@ public class FixedDepositAccount extends SavingsAccount {
         return allPostingPeriods;
     }
 
-    public void prematureClosure(final AppUser currentUser, final JsonCommand command,
-            final LocalDate tenantsTodayDate, final Map<String, Object> actualChanges) {
+    public void prematureClosure(final AppUser currentUser, final JsonCommand command, final LocalDate tenantsTodayDate,
+            final Map<String, Object> actualChanges) {
 
         final List<ApiParameterError> dataValidationErrors = new ArrayList<ApiParameterError>();
         final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
@@ -348,14 +348,15 @@ public class FixedDepositAccount extends SavingsAccount {
         final Integer onAccountClosureId = command.integerValueOfParameterNamed(onAccountClosureIdParamName);
         final DepositAccountOnClosureType onClosureType = DepositAccountOnClosureType.fromInt(onAccountClosureId);
         this.accountTermAndPreClosure.updateOnAccountClosureStatus(onClosureType);
-        
 
-/*        // withdraw deposit amount before closing the account
-        final Money transactionAmountMoney = Money.of(this.currency, this.getAccountBalance());
-        final SavingsAccountTransaction withdraw = SavingsAccountTransaction.withdrawal(this, office(), paymentDetail, closedDate,
-                transactionAmountMoney, new Date());
-        this.transactions.add(withdraw);
-*/
+        /*
+         * // withdraw deposit amount before closing the account final Money
+         * transactionAmountMoney = Money.of(this.currency,
+         * this.getAccountBalance()); final SavingsAccountTransaction withdraw =
+         * SavingsAccountTransaction.withdrawal(this, office(), paymentDetail,
+         * closedDate, transactionAmountMoney, new Date());
+         * this.transactions.add(withdraw);
+         */
         actualChanges.put(SavingsApiConstants.statusParamName, SavingsEnumerations.status(this.status));
         actualChanges.put(SavingsApiConstants.localeParamName, command.locale());
         actualChanges.put(SavingsApiConstants.dateFormatParamName, command.dateFormat());
@@ -715,12 +716,13 @@ public class FixedDepositAccount extends SavingsAccount {
         final SavingsPeriodFrequencyType lockinPeriodFrequencyType = SavingsPeriodFrequencyType.fromInt(this.lockinPeriodFrequencyType);
         final Integer lockinPeriodFrequency = this.lockinPeriodFrequency;
         final boolean withdrawalFeeApplicableForTransfer = false;
+        final boolean depositFeeApplicableForTransfer = false;
         final String accountNumber = null;
         final FixedDepositAccount reInvestedAccount = FixedDepositAccount
                 .createNewApplicationForSubmittal(client, group, product, fieldOfficer, accountNumber, externalId, accountType,
                         getClosedOnDate(), closedBy, interestRate, compoundingPeriodType, postingPeriodType, interestCalculationType,
                         daysInYearType, minRequiredOpeningBalance, lockinPeriodFrequency, lockinPeriodFrequencyType,
-                        withdrawalFeeApplicableForTransfer, savingsAccountCharges, newAccountTermAndPreClosure, newChart);
+                        withdrawalFeeApplicableForTransfer, depositFeeApplicableForTransfer, savingsAccountCharges, newAccountTermAndPreClosure, newChart);
 
         newAccountTermAndPreClosure.updateAccountReference(reInvestedAccount);
         newChart.updateDepositAccountReference(reInvestedAccount);
