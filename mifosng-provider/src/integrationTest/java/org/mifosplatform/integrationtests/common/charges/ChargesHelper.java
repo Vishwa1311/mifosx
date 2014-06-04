@@ -2,6 +2,7 @@ package org.mifosplatform.integrationtests.common.charges;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.mifosplatform.integrationtests.common.CommonConstants;
 import org.mifosplatform.integrationtests.common.Utils;
@@ -41,6 +42,10 @@ public class ChargesHelper {
     private static final Integer CHARGE_FEE_FREQUENCY_WEEKS = 1;
     private static final Integer CHARGE_FEE_FREQUENCY_MONTHS = 2;
     private static final Integer CHARGE_FEE_FREQUENCY_YEARS = 3;
+    
+    private static final Integer PAYMENT_TYPE_CASH = 12;
+    private static final Integer PAYMENT_TYPE_AIRTEL_MONEY = 13;
+    private static final Integer PAYMENT_TYPE_CHEQUE = 14;
 
     private final static boolean active = true;
     private final static boolean penalty = true;
@@ -48,6 +53,69 @@ public class ChargesHelper {
     private final static String currencyCode = "USD";
     public final static String feeOnMonthDay = "04 March";
     private final static String monthDayFormat = "dd MMM";
+    
+    public static String getSavingsChargesWithAdvancedConfigDataAsJSON() {
+        final HashMap<String, Object> map = populateDefaultsForSavings();
+        
+        List<HashMap<String, Object>> paymentTypes = new ArrayList<HashMap<String, Object>>();
+        HashMap<String, Object> paymentTypesConfigMap1 = new HashMap<String, Object>();
+        paymentTypesConfigMap1.put("id", PAYMENT_TYPE_CASH);
+        paymentTypesConfigMap1.put("chargeCalculationType", CHARGE_CALCULATION_TYPE_FLAT);
+        paymentTypesConfigMap1.put("amount", "50");
+        paymentTypes.add(0, paymentTypesConfigMap1);
+
+        HashMap<String, Object> paymentTypesConfigMap2 = new HashMap<String, Object>();
+        paymentTypesConfigMap2.put("id", PAYMENT_TYPE_AIRTEL_MONEY);
+        paymentTypesConfigMap2.put("chargeCalculationType", CHARGE_CALCULATION_TYPE_PERCENTAGE_AMOUNT);
+        paymentTypesConfigMap2.put("amount", "7");
+        paymentTypes.add(1, paymentTypesConfigMap2);
+        
+        HashMap<String, Object> paymentTypesConfigMap3 = new HashMap<String, Object>();
+        paymentTypesConfigMap3.put("id", PAYMENT_TYPE_CHEQUE);
+        paymentTypesConfigMap3.put("chargeCalculationType", CHARGE_CALCULATION_TYPE_FLAT);
+        paymentTypesConfigMap3.put("amount", "100");
+        paymentTypes.add(2, paymentTypesConfigMap3);
+        
+        map.put("paymentTypes", paymentTypes);
+        map.put("chargeTimeType", CHARGE_WITHDRAWAL_FEE);
+        
+        String chargeAdvanceConfigJSON = new Gson().toJson(map);
+        System.out.println(chargeAdvanceConfigJSON);
+        return chargeAdvanceConfigJSON;
+    }
+    
+    public static String getModifiedSavingsChargesWithAdvancedConfigDataAsJSON() {
+        final HashMap<String, Object> map = populateDefaultsForSavings();
+        
+        List<HashMap<String, Object>> paymentTypes = new ArrayList<HashMap<String, Object>>();
+        HashMap<String, Object> paymentTypesConfigMap1 = new HashMap<String, Object>();
+        paymentTypesConfigMap1.put("id", PAYMENT_TYPE_CASH);
+        paymentTypesConfigMap1.put("chargeCalculationType", CHARGE_CALCULATION_TYPE_FLAT);
+        paymentTypesConfigMap1.put("amount", "150");
+        paymentTypesConfigMap1.put("locale", CommonConstants.locale);
+        paymentTypes.add(0, paymentTypesConfigMap1);
+
+        HashMap<String, Object> paymentTypesConfigMap2 = new HashMap<String, Object>();
+        paymentTypesConfigMap2.put("id", PAYMENT_TYPE_AIRTEL_MONEY);
+        paymentTypesConfigMap2.put("chargeCalculationType", CHARGE_CALCULATION_TYPE_PERCENTAGE_AMOUNT);
+        paymentTypesConfigMap2.put("amount", "25");
+        paymentTypesConfigMap2.put("locale", CommonConstants.locale);
+        paymentTypes.add(1, paymentTypesConfigMap2);
+        
+        HashMap<String, Object> paymentTypesConfigMap3 = new HashMap<String, Object>();
+        paymentTypesConfigMap3.put("id", PAYMENT_TYPE_CHEQUE);
+        paymentTypesConfigMap3.put("chargeCalculationType", CHARGE_CALCULATION_TYPE_FLAT);
+        paymentTypesConfigMap3.put("amount", "160");
+        paymentTypesConfigMap3.put("locale", CommonConstants.locale);
+        paymentTypes.add(2, paymentTypesConfigMap3);
+        
+        map.put("paymentTypes", paymentTypes);
+        map.put("chargeTimeType", CHARGE_WITHDRAWAL_FEE);
+        
+        String chargeAdvanceConfigJSON = new Gson().toJson(map);
+        System.out.println(chargeAdvanceConfigJSON);
+        return chargeAdvanceConfigJSON;
+    }
 
     public static String getSavingsSpecifiedDueDateJSON() {
         final HashMap<String, Object> map = populateDefaultsForSavings();

@@ -104,7 +104,7 @@ public final class SavingsAccountTransaction extends AbstractPersistable<Long> {
     private final List<SavingsAccountTransaction> children = new LinkedList<SavingsAccountTransaction>();
 
     @ManyToOne
-    @JoinColumn(name = "parent_id", nullable = true)
+    @JoinColumn(name = "parent_transaction_id", nullable = true)
     private SavingsAccountTransaction parent;
 
     protected SavingsAccountTransaction() {

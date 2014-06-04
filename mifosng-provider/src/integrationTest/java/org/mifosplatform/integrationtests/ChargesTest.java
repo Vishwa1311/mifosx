@@ -305,4 +305,21 @@ public class ChargesTest {
         chargeIdAfterDeletion = ChargesHelper.deleteCharge(this.responseSpec, this.requestSpec, overdraftFeeChargeId);
         Assert.assertEquals("Verifying Charge ID after deletion", overdraftFeeChargeId, chargeIdAfterDeletion);
     }
+    
+    @SuppressWarnings("unused")
+    @Test
+    public void testChargesForSavingsWithAdvancedConfig() {
+
+        // Testing Creation, Updation and Deletion of Savings Charges with Advanced Config
+        final Integer savingsChargeWithAdvancedConfigId = ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON());
+        Assert.assertNotNull(savingsChargeWithAdvancedConfigId);
+        
+        final HashMap changes = ChargesHelper.updateCharges(this.requestSpec, this.responseSpec, savingsChargeWithAdvancedConfigId, ChargesHelper.getModifiedSavingsChargesWithAdvancedConfigDataAsJSON());
+        final HashMap paymentTypeChanges = (HashMap) changes.get("paymentTypes");
+        
+        final Integer savingsChargeIdAfterDeletion = ChargesHelper.deleteCharge(this.responseSpec, this.requestSpec, savingsChargeWithAdvancedConfigId);
+        Assert.assertEquals("Verifying Charge ID after deletion",savingsChargeWithAdvancedConfigId, savingsChargeIdAfterDeletion);
+        
+    }
 }
