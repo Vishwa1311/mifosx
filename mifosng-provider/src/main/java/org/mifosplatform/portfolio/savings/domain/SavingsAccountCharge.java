@@ -105,8 +105,8 @@ public class SavingsAccountCharge extends AbstractPersistable<Long> {
     @Column(name = "is_active", nullable = false)
     private boolean status = true;
     
-    @Column(name = "apply_for_all_products", nullable = false)
-    private boolean applyForAllProducts = false;
+    @Column(name = "applicable_to_all_products", nullable = false)
+    private boolean applicableToAllProducts = false;
 
     public static SavingsAccountCharge createNewFromJson(final SavingsAccount savingsAccount, final Charge chargeDefinition,
             final JsonCommand command) {
