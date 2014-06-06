@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mifosplatform.integrationtests.common.Utils;
 import org.mifosplatform.integrationtests.common.charges.ChargesHelper;
+import org.mifosplatform.integrationtests.common.system.CodeHelper;
 
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.builder.ResponseSpecBuilder;
@@ -304,5 +305,65 @@ public class ChargesTest {
 
         chargeIdAfterDeletion = ChargesHelper.deleteCharge(this.responseSpec, this.requestSpec, overdraftFeeChargeId);
         Assert.assertEquals("Verifying Charge ID after deletion", overdraftFeeChargeId, chargeIdAfterDeletion);
+
+        // Testing Creation, Updation and Deletion of Charge for Deposit Fee
+        final Integer depositFeeChargeId = ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsDepositFeeJSON());
+        Assert.assertNotNull(depositFeeChargeId);
+
+        // Updating Charge Amount
+        changes = ChargesHelper.updateCharges(this.requestSpec, this.responseSpec, depositFeeChargeId, ChargesHelper.getModifyChargeJSON());
+
+        chargeDataAfterChanges = ChargesHelper.getChargeById(this.requestSpec, this.responseSpec, depositFeeChargeId);
+        Assert.assertEquals("Verifying Charge after Modification", chargeDataAfterChanges.get("amount"), changes.get("amount"));
+
+        chargeIdAfterDeletion = ChargesHelper.deleteCharge(this.responseSpec, this.requestSpec, depositFeeChargeId);
+        Assert.assertEquals("Verifying Charge ID after deletion", depositFeeChargeId, chargeIdAfterDeletion);
+
+    }
+
+    @SuppressWarnings({ "cast", "unchecked" })
+    @Test
+    public void testChargesForSavingsWithAdvancedConfig() {
+
+        final String codeValue = Utils.randomNameGenerator("CASH_", 5);
+        final int codeValuePosition = 0;
+        final String codeName = "PaymentType";
+
+        // Retrieve all Codes
+        final ArrayList<HashMap> retrieveAllCodes = (ArrayList) CodeHelper.getAllCodes(this.requestSpec, this.responseSpec);
+
+        final Integer paymentTypeCodeId = CodeHelper.getCodeByName(retrieveAllCodes, codeName);
+        Assert.assertNotNull("Code with name PaymentType not found", paymentTypeCodeId);
+
+        final Integer codeValueId = (Integer) CodeHelper.createCodeValue(this.requestSpec, this.responseSpec, paymentTypeCodeId, codeValue,
+                codeValuePosition, CodeHelper.SUBRESPONSE_ID_ATTRIBUTE_NAME);
+
+        // Testing Creation, Updation and Deletion of Savings Charges with
+        // Payment Type Option
+        final Integer savingsChargeWithAdvancedConfigId = ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON(codeValueId));
+        Assert.assertNotNull(savingsChargeWithAdvancedConfigId);
+
+        // Updating Payment Type Charge Amount
+        HashMap changes = ChargesHelper.updateCharges(this.requestSpec, this.responseSpec, savingsChargeWithAdvancedConfigId,
+                ChargesHelper.getModifiedSavingsChargesWithAdvancedConfigDataAsJSON(codeValueId));
+        changes = (HashMap) changes.get("paymentTypes");
+        final HashMap chargeDataAfterUpdate = ChargesHelper.getChargeById(this.requestSpec, this.responseSpec,
+                savingsChargeWithAdvancedConfigId);
+        final ArrayList<HashMap> paymentTypeChanges = (ArrayList<HashMap>) chargeDataAfterUpdate.get("paymentTypeCharges");
+
+        for (int i = 0; i < paymentTypeChanges.size(); i++) {
+            final Integer paymentTypeChargeId = (Integer) paymentTypeChanges.get(i).get("id");
+            HashMap changesMap = (HashMap) changes.get(paymentTypeChargeId.toString());
+            Float expectedAmount = new Float((Integer) changesMap.get("amount"));
+            Assert.assertEquals("Verifying Payment Type Charge amount after updation", expectedAmount, (Float) paymentTypeChanges.get(i)
+                    .get("amount"));
+        }
+
+        final Integer savingsChargeIdAfterDeletion = ChargesHelper.deleteCharge(this.responseSpec, this.requestSpec,
+                savingsChargeWithAdvancedConfigId);
+        Assert.assertEquals("Verifying Charge ID after deletion", savingsChargeWithAdvancedConfigId, savingsChargeIdAfterDeletion);
+
     }
 }

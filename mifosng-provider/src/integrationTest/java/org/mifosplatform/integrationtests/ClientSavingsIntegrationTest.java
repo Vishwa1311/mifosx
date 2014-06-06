@@ -18,6 +18,8 @@ import org.mifosplatform.integrationtests.common.charges.ChargesHelper;
 import org.mifosplatform.integrationtests.common.savings.SavingsAccountHelper;
 import org.mifosplatform.integrationtests.common.savings.SavingsProductHelper;
 import org.mifosplatform.integrationtests.common.savings.SavingsStatusChecker;
+import org.mifosplatform.integrationtests.common.system.CodeHelper;
+import org.mifosplatform.portfolio.charge.domain.ChargeAppliesTo;
 
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.builder.ResponseSpecBuilder;
@@ -32,7 +34,7 @@ import com.jayway.restassured.specification.ResponseSpecification;
 public class ClientSavingsIntegrationTest {
 
     public static final String DEPOSIT_AMOUNT = "2000";
-    public static final String WITHDRAW_AMOUNT = "1000";
+    public static final String WITHDRAW_AMOUNT = "100";
     public static final String WITHDRAW_AMOUNT_ADJUSTED = "500";
     public static final String MINIMUM_OPENING_BALANCE = "1000.0";
     public static final String ACCOUNT_TYPE_INDIVIDUAL = "INDIVIDUAL";
@@ -392,6 +394,82 @@ public class ClientSavingsIntegrationTest {
         this.savingsAccountHelper.waiveCharge((Integer) savingsChargeForWaive.get("id"), savingsId);
         HashMap waiveCharge = this.savingsAccountHelper.getSavingsCharge(savingsId, (Integer) savingsChargeForWaive.get("id"));
         assertEquals(savingsChargeForWaive.get("amount"), waiveCharge.get("amountWaived"));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSavingsAccountChargesWithPaymentTypes() {
+        this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
+
+        final String codeValue = Utils.randomNameGenerator("CASH_", 5);
+        final int codeValuePosition = 0;
+        final String codeName = "PaymentType";
+
+        // Retrieve All Codes
+        final ArrayList<HashMap> retrieveAllCodes = (ArrayList) CodeHelper.getAllCodes(this.requestSpec, this.responseSpec);
+
+        Integer paymentTypeCodeId = CodeHelper.getCodeByName(retrieveAllCodes, codeName);
+        Assert.assertNotNull("Code with name PaymentType not found", paymentTypeCodeId);
+
+        final Integer codeValueId = (Integer) CodeHelper.createCodeValue(this.requestSpec, this.responseSpec, paymentTypeCodeId, codeValue,
+                codeValuePosition, CodeHelper.SUBRESPONSE_ID_ATTRIBUTE_NAME);
+
+        final Integer clientID = ClientHelper.createClient(this.requestSpec, this.responseSpec);
+        Assert.assertNotNull(clientID);
+
+        final Integer savingsProductID = createSavingsProduct(this.requestSpec, this.responseSpec, MINIMUM_OPENING_BALANCE);
+        Assert.assertNotNull(savingsProductID);
+
+        final Integer savingsId = this.savingsAccountHelper.applyForSavingsApplication(clientID, savingsProductID, ACCOUNT_TYPE_INDIVIDUAL);
+        Assert.assertNotNull(savingsProductID);
+
+        HashMap savingsStatusHashMap = SavingsStatusChecker.getStatusOfSavings(this.requestSpec, this.responseSpec, savingsId);
+        SavingsStatusChecker.verifySavingsIsPending(savingsStatusHashMap);
+
+        final Integer depositFeeChargeId = ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON(codeValueId));
+        Assert.assertNotNull(depositFeeChargeId);
+        
+        final HashMap depositChargeData = ChargesHelper.getChargeById(this.requestSpec, this.responseSpec, depositFeeChargeId);
+        final ArrayList<HashMap> depositPaymentTypeChargeData = (ArrayList) depositChargeData.get("paymentTypeCharges");
+        final Float depositChargeAmount =  (Float) depositPaymentTypeChargeData.get(0).get("amount");
+
+        final Integer withdrawalFeeChargeId = ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getModifiedSavingsChargesWithAdvancedConfigDataAsJSON(codeValueId));
+        Assert.assertNotNull(withdrawalFeeChargeId);
+        
+        final HashMap withdrawalChargeData = ChargesHelper.getChargeById(this.requestSpec, this.responseSpec, withdrawalFeeChargeId);
+        final ArrayList<HashMap> withdrawalPaymentTypeChargeData = (ArrayList) withdrawalChargeData.get("paymentTypeCharges");
+        final Float withdrawalChargeAmount =  (Float) withdrawalPaymentTypeChargeData.get(0).get("amount");
+        
+        savingsStatusHashMap = this.savingsAccountHelper.approveSavings(savingsId);
+        SavingsStatusChecker.verifySavingsIsApproved(savingsStatusHashMap);
+
+        savingsStatusHashMap = this.savingsAccountHelper.activateSavings(savingsId);
+        SavingsStatusChecker.verifySavingsIsActive(savingsStatusHashMap);
+
+        HashMap summary = this.savingsAccountHelper.getSavingsSummary(savingsId);
+        Float balance = new Float(MINIMUM_OPENING_BALANCE);
+        assertEquals("Verifying opening Balance", balance, summary.get("accountBalance"));
+
+        Integer depositTransactionId = (Integer) this.savingsAccountHelper.depositToSavingsAccountWithPaymentType(savingsId,
+                DEPOSIT_AMOUNT, SavingsAccountHelper.TRANSACTION_DATE, codeValueId, CommonConstants.RESPONSE_RESOURCE_ID);
+        HashMap depositTransaction = this.savingsAccountHelper.getSavingsTransaction(savingsId, (depositTransactionId));
+        balance += new Float(DEPOSIT_AMOUNT) - depositChargeAmount;
+        summary = this.savingsAccountHelper.getSavingsSummary(savingsId);
+
+        assertEquals("Verifying Deposit Amount", new Float(DEPOSIT_AMOUNT), depositTransaction.get("amount"));
+        assertEquals("Verifying Balance after Deposit", balance, summary.get("accountBalance"));
+
+        Integer withdrawalTransactionId = (Integer) this.savingsAccountHelper.withdrawalFromSavingsAccountWithPaymentType(savingsId,
+                WITHDRAW_AMOUNT, SavingsAccountHelper.TRANSACTION_DATE, codeValueId, CommonConstants.RESPONSE_RESOURCE_ID);
+        HashMap withdrawalTransaction = this.savingsAccountHelper.getSavingsTransaction(savingsId, withdrawalTransactionId);
+        balance = (balance - new Float(WITHDRAW_AMOUNT) - withdrawalChargeAmount);
+        summary = this.savingsAccountHelper.getSavingsSummary(savingsId);
+        
+        assertEquals("Verifying Withdrawal Amount", new Float(WITHDRAW_AMOUNT), withdrawalTransaction.get("amount"));
+        assertEquals("Verifying Balance after Withdrawal", balance, summary.get("accountBalance"));
+
     }
 
     private Integer createSavingsProduct(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,

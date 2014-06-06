@@ -54,6 +54,7 @@ public class AccountTransferTest {
     private SavingsAccountHelper savingsAccountHelper;
     private AccountTransferHelper accountTransferHelper;
     private LoanTransactionHelper loanTransactionHelper;
+    private ChargesHelper chargesHelper;
 
     Float TRANSFER_AMOUNT = new Float(ACCOUNT_TRANSFER_AMOUNT);
     Float TRANSFER_AMOUNT_ADJUST = new Float(ACCOUNT_TRANSFER_AMOUNT_ADJUST);
@@ -192,7 +193,8 @@ public class AccountTransferTest {
                 fromSavingsSummaryAfter.get("accountBalance"));
 
         HashMap toLoanSummaryAfter = this.loanTransactionHelper.getLoanSummary(requestSpec, responseSpec, toLoanID);
-        assertEquals("Verifying To Loan Repayment Amount after Account Transfer", TRANSFER_AMOUNT_ADJUST, toLoanSummaryAfter.get("totalRepayment"));
+        assertEquals("Verifying To Loan Repayment Amount after Account Transfer", TRANSFER_AMOUNT_ADJUST,
+                toLoanSummaryAfter.get("totalRepayment"));
     }
 
     @Test
@@ -286,6 +288,88 @@ public class AccountTransferTest {
 
         // Verifying toSavings Account Balance after Account Transfer
         assertEquals("Verifying From Savings Account Balance after Account Transfer", toSavingsBalance,
+                toSavingsSummaryAfter.get("accountBalance"));
+    }
+
+    @Test
+    public void testFromSavingsToSavingsAccountTransferWithCharges() {
+        this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
+        this.accountTransferHelper = new AccountTransferHelper(this.requestSpec, this.responseSpec);
+
+        // Creating Savings Account to which fund to be Transferred
+        final Integer toClientID = ClientHelper.createClient(this.requestSpec, this.responseSpec);
+        Assert.assertNotNull(toClientID);
+
+        final Integer toSavingsProductID = createSavingsProduct(this.requestSpec, this.responseSpec, MINIMUM_OPENING_BALANCE);
+        Assert.assertNotNull(toSavingsProductID);
+
+        final Integer toSavingsID = this.savingsAccountHelper.applyForSavingsApplication(toClientID, toSavingsProductID,
+                ACCOUNT_TYPE_INDIVIDUAL);
+        Assert.assertNotNull(toSavingsProductID);
+
+        HashMap toSavingsStatusHashMap = SavingsStatusChecker.getStatusOfSavings(this.requestSpec, this.responseSpec, toSavingsID);
+        SavingsStatusChecker.verifySavingsIsPending(toSavingsStatusHashMap);
+
+        final Integer depositFeeChargeId = ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsDepositFeeJSON());
+        Assert.assertNotNull(depositFeeChargeId);
+
+        final Integer withdrawalFeeChargeId = ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsWithdrawalFeeJSON());
+        Assert.assertNotNull(withdrawalFeeChargeId);
+
+        this.savingsAccountHelper.addChargesForSavings(toSavingsID, depositFeeChargeId);
+        this.savingsAccountHelper.addChargesForSavings(toSavingsID, withdrawalFeeChargeId);
+
+        toSavingsStatusHashMap = this.savingsAccountHelper.approveSavings(toSavingsID);
+        SavingsStatusChecker.verifySavingsIsApproved(toSavingsStatusHashMap);
+
+        toSavingsStatusHashMap = this.savingsAccountHelper.activateSavings(toSavingsID);
+        SavingsStatusChecker.verifySavingsIsActive(toSavingsStatusHashMap);
+
+        final HashMap toSavingsSummaryBefore = this.savingsAccountHelper.getSavingsSummary(toSavingsID);
+
+        // Creating Savings Account from which the Fund has to be Transferred
+        final Integer fromClientID = ClientHelper.createClient(this.requestSpec, this.responseSpec);
+        Assert.assertNotNull(fromClientID);
+
+        final Integer fromSavingsProductID = createSavingsProduct(this.requestSpec, this.responseSpec, MINIMUM_OPENING_BALANCE);
+        Assert.assertNotNull(fromSavingsProductID);
+
+        final Integer fromSavingsID = this.savingsAccountHelper.applyForSavingsApplication(fromClientID, fromSavingsProductID,
+                ACCOUNT_TYPE_INDIVIDUAL);
+        Assert.assertNotNull(fromSavingsID);
+
+        HashMap fromSavingsStatusHashMap = SavingsStatusChecker.getStatusOfSavings(this.requestSpec, this.responseSpec, fromSavingsID);
+        SavingsStatusChecker.verifySavingsIsPending(fromSavingsStatusHashMap);
+
+        this.savingsAccountHelper.addChargesForSavings(fromSavingsID, withdrawalFeeChargeId);
+        this.savingsAccountHelper.addChargesForSavings(fromSavingsID, depositFeeChargeId);
+
+        fromSavingsStatusHashMap = this.savingsAccountHelper.approveSavings(fromSavingsID);
+        SavingsStatusChecker.verifySavingsIsApproved(fromSavingsStatusHashMap);
+
+        fromSavingsStatusHashMap = this.savingsAccountHelper.activateSavings(fromSavingsID);
+        SavingsStatusChecker.verifySavingsIsActive(fromSavingsStatusHashMap);
+
+        final HashMap fromSavingsSummaryBefore = this.savingsAccountHelper.getSavingsSummary(fromSavingsID);
+
+        Float fromSavingsBalance = new Float(MINIMUM_OPENING_BALANCE) - new Float(ChargesHelper.amount);
+        Float toSavingsBalance = new Float(MINIMUM_OPENING_BALANCE) - new Float(ChargesHelper.amount);
+
+        Integer transferTransactionId = this.accountTransferHelper.accountTransfer(fromClientID, fromSavingsID, toClientID, toSavingsID,
+                FROM_SAVINGS_ACCOUNT_TYPE, TO_SAVINGS_ACCOUNT_TYPE, ACCOUNT_TRANSFER_AMOUNT);
+        Assert.assertNotNull(transferTransactionId);
+
+        fromSavingsBalance = (fromSavingsBalance - new Float(ACCOUNT_TRANSFER_AMOUNT) - new Float(ChargesHelper.amount));
+        toSavingsBalance += (new Float(ACCOUNT_TRANSFER_AMOUNT) - new Float(ChargesHelper.amount));
+
+        HashMap fromSavingsSummaryAfter = this.savingsAccountHelper.getSavingsSummary(fromSavingsID);
+        assertEquals("Verifying From Savings Account Balance after Account Transfer", fromSavingsBalance,
+                fromSavingsSummaryAfter.get("accountBalance"));
+
+        HashMap toSavingsSummaryAfter = this.savingsAccountHelper.getSavingsSummary(toSavingsID);
+        assertEquals("Verifying To Savings Account Balance after Account Transfer", toSavingsBalance,
                 toSavingsSummaryAfter.get("accountBalance"));
     }
 
