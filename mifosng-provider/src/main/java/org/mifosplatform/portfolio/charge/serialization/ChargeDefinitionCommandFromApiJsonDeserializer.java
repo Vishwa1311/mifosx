@@ -87,6 +87,7 @@ public final class ChargeDefinitionCommandFromApiJsonDeserializer {
         if (appliesTo.isLoanCharge()) {
             // loan applicable validation
             final Integer chargeTimeType = this.fromApiJsonHelper.extractIntegerSansLocaleNamed("chargeTimeType", element);
+            final JsonArray paymentTypes = this.fromApiJsonHelper.extractJsonArrayNamed("paymentTypes", element);
             baseDataValidator.reset().parameter("chargeTimeType").value(chargeTimeType).notNull();
             if (chargeTimeType != null) {
                 baseDataValidator.reset().parameter("chargeTimeType").value(chargeTimeType)
@@ -106,13 +107,24 @@ public final class ChargeDefinitionCommandFromApiJsonDeserializer {
                         .isOneOfTheseValues(ChargeCalculationType.validValuesForLoan());
             }
 
+            if (paymentTypes != null) {
+                baseDataValidator.reset().parameter("paymentTypes").value(paymentTypes.toString())
+                        .mustBeBlankWhenParameterProvidedIs("chargeAppliesTo", ChargeAppliesTo.LOAN.getValue());
+            }
+
         } else if (appliesTo.isSavingsCharge()) {
             // savings applicable validation
             final Integer chargeTimeType = this.fromApiJsonHelper.extractIntegerSansLocaleNamed("chargeTimeType", element);
+            final JsonArray paymentTypes = this.fromApiJsonHelper.extractJsonArrayNamed("paymentTypes", element);
             baseDataValidator.reset().parameter("chargeTimeType").value(chargeTimeType).notNull();
             if (chargeTimeType != null) {
-                baseDataValidator.reset().parameter("chargeTimeType").value(chargeTimeType)
-                        .isOneOfTheseValues(ChargeTimeType.validSavingsValues());
+                if (paymentTypes != null) {
+                    baseDataValidator.reset().parameter("chargeTimeType").value(chargeTimeType)
+                            .isOneOfTheseValues(ChargeTimeType.validSavingsPaymentTypeValues());
+                } else {
+                    baseDataValidator.reset().parameter("chargeTimeType").value(chargeTimeType)
+                            .isOneOfTheseValues(ChargeTimeType.validSavingsValues());
+                }
             }
 
             final ChargeTimeType ctt = ChargeTimeType.fromInt(chargeTimeType);
@@ -275,7 +287,7 @@ public final class ChargeDefinitionCommandFromApiJsonDeserializer {
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
-    
+
     private void validateLinkedPaymentTypes(final DataValidatorBuilder baseDataValidator, final JsonElement element) {
         final Locale locale = this.fromApiJsonHelper.extractLocaleParameter(element.getAsJsonObject());
 

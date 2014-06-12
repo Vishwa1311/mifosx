@@ -357,11 +357,14 @@ public class Charge extends AbstractPersistable<Long> {
                             .failWithCodeNoParameterAddedToErrorCode("not.allowed.charge.calculation.type.for.savings");
                 }
 
-                if (!(ChargeTimeType.fromInt(getChargeTime()).isWithdrawalFee() || 
-                        ChargeTimeType.fromInt(getChargeTime()).isDepositFee())
+                if (!(ChargeTimeType.fromInt(getChargeTime()).isWithdrawalFee() || ChargeTimeType.fromInt(getChargeTime()).isDepositFee())
                         && ChargeCalculationType.fromInt(getChargeCalculation()).isPercentageOfAmount()) {
-                    baseDataValidator.reset().parameter("chargeCalculationType").value(this.chargeCalculation)
-                            .failWithCodeNoParameterAddedToErrorCode("charge.calculation.type.percentage.allowed.only.for.withdrawal.or.deposit");
+                    baseDataValidator
+                            .reset()
+                            .parameter("chargeCalculationType")
+                            .value(this.chargeCalculation)
+                            .failWithCodeNoParameterAddedToErrorCode(
+                                    "charge.calculation.type.percentage.allowed.only.for.withdrawal.or.deposit");
                 }
             }
         }
@@ -537,7 +540,14 @@ public class Charge extends AbstractPersistable<Long> {
         return paymentTypeCharges;
     }
 
-    public void updatePaymentTypeCharges(final Set<PaymentTypeCharge> updatedPaymentTypeCharge) {
+    public void updatePaymentTypeCharges(final Set<PaymentTypeCharge> updatedPaymentTypeCharge, final DataValidatorBuilder baseDataValidator) {
+        final ChargeTimeType chargeTimeType = chargeTimeType();
+        if ((isSavingsCharge() || isLoanCharge()) && !((updatedPaymentTypeCharge == null || updatedPaymentTypeCharge.isEmpty()))) {
+            if (!(chargeTimeType.isWithdrawalFee() || chargeTimeType.isDepositFee())) {
+                baseDataValidator.reset().parameter("chargeTimeType").value(this.chargeTime)
+                        .failWithCodeNoParameterAddedToErrorCode("linking.payment.type.for.this.charge.time.type.is.not.allowed");
+            }
+        }
         this.paymentTypeCharges().clear();
         this.paymentTypeCharges().addAll(updatedPaymentTypeCharge);
     }
@@ -554,7 +564,7 @@ public class Charge extends AbstractPersistable<Long> {
         return ChargeCalculationType.fromInt(this.chargeCalculation);
     }
 
-    public boolean isApplicableForPaymentTypes(){
+    public boolean isApplicableForPaymentTypes() {
         return (this.paymentTypeCharges != null && !this.paymentTypeCharges.isEmpty());
     }
 }

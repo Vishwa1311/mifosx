@@ -226,7 +226,7 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
 
         // FIXME: Need to handle this in better way
         // Payment Type Charge is deleted if its not part of update request.
-        charge.updatePaymentTypeCharges(updatedPaymentTypeCharges);
+        charge.updatePaymentTypeCharges(updatedPaymentTypeCharges, baseDataValidator);
 
         return actualChanges;
     }

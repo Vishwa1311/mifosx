@@ -84,7 +84,7 @@ public class RecurringDepositAccountHelper {
     private final String depositPeriodFrequencyId = MONTHS;
     private final String recurringDepositFrequency = "1";
     private final String recurringDepositFrequencyTypeId = MONTHS;
-    private final String recurringDepositAmount = "2000";
+    private final String mandatoryRecommendedDepositAmount = "2000";
     private String submittedOnDate = "";
     private String expectedFirstDepositOnDate = "";
 
@@ -165,10 +165,11 @@ public class RecurringDepositAccountHelper {
         map.put("depositPeriod", this.depositPeriod);
         map.put("depositPeriodFrequencyId", this.depositPeriodFrequencyId);
         map.put("submittedOnDate", this.submittedOnDate);
-        map.put("recurringDepositFrequency", this.recurringDepositFrequency);
-        map.put("recurringDepositFrequencyTypeId", this.recurringDepositFrequencyTypeId);
-        map.put("recurringDepositAmount", this.recurringDepositAmount);
+        // map.put("recurringDepositFrequency", this.recurringDepositFrequency);
+        // map.put("recurringDepositFrequencyTypeId", this.recurringDepositFrequencyTypeId);
+        map.put("mandatoryRecommendedDepositAmount", this.mandatoryRecommendedDepositAmount);
         map.put("expectedFirstDepositOnDate", this.expectedFirstDepositOnDate);
+        map.put("isCalendarInherited", true);
 
         String recurringDepositAccountJson = new Gson().toJson(map);
         System.out.println(recurringDepositAccountJson);

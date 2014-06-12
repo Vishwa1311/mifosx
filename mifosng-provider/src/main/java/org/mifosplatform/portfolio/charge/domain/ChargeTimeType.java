@@ -54,6 +54,10 @@ public enum ChargeTimeType {
                 ChargeTimeType.SAVINGS_CLOSURE.getValue(), ChargeTimeType.WITHDRAWAL_FEE.getValue(), ChargeTimeType.ANNUAL_FEE.getValue(),
                 ChargeTimeType.MONTHLY_FEE.getValue(), ChargeTimeType.OVERDRAFT_FEE.getValue(), ChargeTimeType.DEPOSIT_FEE.getValue() };
     }
+    
+    public static Object[] validSavingsPaymentTypeValues() {
+        return new Integer[] { ChargeTimeType.WITHDRAWAL_FEE.getValue(), ChargeTimeType.DEPOSIT_FEE.getValue() };
+    }
 
     public static ChargeTimeType fromInt(final Integer chargeTime) {
         ChargeTimeType chargeTimeType = ChargeTimeType.INVALID;
@@ -144,7 +148,7 @@ public enum ChargeTimeType {
         return isOnSpecifiedDueDate() || isSavingsActivation() || isSavingsClosure() || isWithdrawalFee() || isAnnualFee()
                 || isMonthlyFee() || isOverdraftFee() || isDepositFee();
     }
-
+    
     public boolean isOverdraftFee() {
         return this.value.equals(ChargeTimeType.OVERDRAFT_FEE.getValue());
     }
