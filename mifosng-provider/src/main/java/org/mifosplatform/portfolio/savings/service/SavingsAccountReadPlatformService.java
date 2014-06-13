@@ -7,6 +7,8 @@ package org.mifosplatform.portfolio.savings.service;
 
 import java.util.Collection;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.mifosplatform.infrastructure.core.service.Page;
 import org.mifosplatform.portfolio.group.service.SearchParameters;
 import org.mifosplatform.portfolio.savings.DepositAccountType;
@@ -18,7 +20,7 @@ public interface SavingsAccountReadPlatformService {
     Page<SavingsAccountData> retrieveAll(SearchParameters searchParameters);
 
     Collection<SavingsAccountData> retrieveAllForLookup(Long clientId);
-    
+
     Collection<SavingsAccountData> retrieveActiveForLookup(Long clientId, DepositAccountType depositAccountType);
 
     SavingsAccountData retrieveOne(Long savingsId);
@@ -33,6 +35,9 @@ public interface SavingsAccountReadPlatformService {
     // retrieveAccountsWithAnnualFeeDue();
 
     SavingsAccountTransactionData retrieveSavingsTransaction(Long savingsId, Long transactionId, DepositAccountType depositAccountType);
-    
-    Collection<SavingsAccountData> retrieveForLookup(Long clientId,Boolean overdraft);
+
+    Collection<SavingsAccountData> retrieveForLookup(Long clientId, Boolean overdraft);
+
+    Collection<SavingsAccountTransactionData> searchSavingsTransactionByPaymentDetail(Long savingsId, DepositAccountType depositAccountType,
+            MultivaluedMap<String, String> searchQueryParam);
 }

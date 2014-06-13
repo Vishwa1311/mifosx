@@ -122,10 +122,28 @@ public class SavingsAccountHelper {
                 getSavingsTransactionJSON(amount, date), jsonAttributeToGetback);
     }
 
+    public Object depositToSavingsAccountWithPaymentDetails(final Integer savingsId, final String amount, final String transactionDate,
+            final String jsonAttributeToGetBack, final String paymentTypeId, final String accountNumber, final String receiptNumber) {
+        System.out
+                .println("--------------------------------- SAVINGS TRANSACTION DEPOSIT WITH PAYMENT DETAILS --------------------------------");
+        return performSavingActions(createSavingsTransactionURL(DEPOSIT_SAVINGS_COMMAND, savingsId),
+                getSavingsTransactionWithPaymentDetailsAsJSON(amount, transactionDate, paymentTypeId, accountNumber, receiptNumber),
+                jsonAttributeToGetBack);
+    }
+
     public Object withdrawalFromSavingsAccount(final Integer savingsId, final String amount, String date, String jsonAttributeToGetback) {
         System.out.println("\n--------------------------------- SAVINGS TRANSACTION WITHDRAWAL --------------------------------");
         return performSavingActions(createSavingsTransactionURL(WITHDRAW_SAVINGS_COMMAND, savingsId),
                 getSavingsTransactionJSON(amount, date), jsonAttributeToGetback);
+    }
+
+    public Object withdrawalToSavingsAccountWithPaymentDetails(final Integer savingsId, final String amount, final String transactionDate,
+            final String jsonAttributeToGetBack, final String paymentTypeId, final String accountNumber, final String receiptNumber) {
+        System.out
+                .println("--------------------------------- SAVINGS TRANSACTION WITHDRAWAL WITH PAYMENT DETAILS --------------------------------");
+        return performSavingActions(createSavingsTransactionURL(WITHDRAW_SAVINGS_COMMAND, savingsId),
+                getSavingsTransactionWithPaymentDetailsAsJSON(amount, transactionDate, paymentTypeId, accountNumber, receiptNumber),
+                jsonAttributeToGetBack);
     }
 
     public Integer updateSavingsAccountTransaction(final Integer savingsId, final Integer transactionId, final String amount) {
@@ -232,6 +250,24 @@ public class SavingsAccountHelper {
         return savingsAccountWithdrawalJson;
     }
 
+    private String getSavingsTransactionWithPaymentDetailsAsJSON(final String amount, final String transactionDate,
+            final String paymentTypeId, final String accountNumber, final String receiptNumber) {
+        final HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("transactionDate", transactionDate);
+        map.put("transactionAmount", amount);
+        map.put("paymentTypeId", paymentTypeId);
+        map.put("accountNumber", accountNumber);
+        map.put("checkNumber", "12");
+        map.put("routingCode", "123");
+        map.put("receiptNumber", receiptNumber);
+        map.put("bankNumber", "12345");
+        map.put("locale", "en");
+        map.put("dateFormat", "dd MMMM yyyy");
+        String savingsTransactionSearch = new Gson().toJson(map);
+        System.out.println(savingsTransactionSearch);
+        return savingsTransactionSearch;
+    }
+
     private String getCalculatedInterestForSavingsApplicationAsJSON() {
         final HashMap<String, String> map = new HashMap<String, String>();
         String savingsAccountCalculatedInterestJson = new Gson().toJson(map);
@@ -316,6 +352,26 @@ public class SavingsAccountHelper {
     public HashMap getSavingsTransaction(final Integer savingsID, final Integer savingsTransactionId) {
         final String URL = SAVINGS_ACCOUNT_URL + "/" + savingsID + "/transactions/" + savingsTransactionId + "?" + Utils.TENANT_IDENTIFIER;
         return Utils.performServerGet(requestSpec, responseSpec, URL, "");
+    }
+
+    public HashMap getSavingsTransactionByPaymentDetails(final Integer savingsID, final String accountNumber, final String receiptNumber) {
+        final String URL = SAVINGS_ACCOUNT_URL + "/" + savingsID + "/transactions/search?accountNumber=" + accountNumber
+                + "&receiptNumber=" + receiptNumber;
+        return Utils.performServerGet(requestSpec, responseSpec, URL, "");
+    }
+
+    public List<HashMap> getSavingsTransactionByPaymentDetailsWithUnsupportedParam(ResponseSpecification responseSpecWithFailure, Integer savingsID, final String accountNumber,
+            final String receiptNumber) {
+        final String URL = SAVINGS_ACCOUNT_URL + "/" + savingsID + "/transactions/search?accountNum=" + accountNumber
+                + "&receiptNum=" + receiptNumber;
+        return Utils.performServerGet(requestSpec, responseSpecWithFailure, URL, CommonConstants.RESPONSE_ERROR);
+    }
+    
+    public List<HashMap> getSavingsTransactionByPaymentDetailsWithoutQueryParamValue(ResponseSpecification responseSpecWithFailure, Integer savingsID, final String accountNumber,
+            final String receiptNumber) {
+        final String URL = SAVINGS_ACCOUNT_URL + "/" + savingsID + "/transactions/search?accountNumber=" + accountNumber
+                + "&receiptNumber=" + receiptNumber;
+        return Utils.performServerGet(requestSpec, responseSpecWithFailure, URL, CommonConstants.RESPONSE_ERROR);
     }
 
     public Object getSavingsInterest(final Integer savingsID) {

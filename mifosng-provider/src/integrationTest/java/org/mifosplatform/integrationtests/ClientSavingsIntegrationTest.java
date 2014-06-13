@@ -18,6 +18,7 @@ import org.mifosplatform.integrationtests.common.charges.ChargesHelper;
 import org.mifosplatform.integrationtests.common.savings.SavingsAccountHelper;
 import org.mifosplatform.integrationtests.common.savings.SavingsProductHelper;
 import org.mifosplatform.integrationtests.common.savings.SavingsStatusChecker;
+import org.mifosplatform.integrationtests.common.system.CodeHelper;
 
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.builder.ResponseSpecBuilder;
@@ -36,9 +37,12 @@ public class ClientSavingsIntegrationTest {
     public static final String WITHDRAW_AMOUNT_ADJUSTED = "500";
     public static final String MINIMUM_OPENING_BALANCE = "1000.0";
     public static final String ACCOUNT_TYPE_INDIVIDUAL = "INDIVIDUAL";
+    public static final String ACCOUNT_NUMBER = "2122";
+    public static final String RECEIPT_NUMBER = "39182";
 
     private ResponseSpecification responseSpec;
     private RequestSpecification requestSpec;
+    private ResponseSpecification responseSpecWithFailure;
     private SavingsAccountHelper savingsAccountHelper;
 
     @Before
@@ -46,7 +50,9 @@ public class ClientSavingsIntegrationTest {
         Utils.initializeRESTAssured();
         this.requestSpec = new RequestSpecBuilder().setContentType(ContentType.JSON).build();
         this.requestSpec.header("Authorization", "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey());
+        this.requestSpec.header("X-Mifos-Platform-TenantId", "default");
         this.responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
+        this.responseSpecWithFailure = new ResponseSpecBuilder().expectStatusCode(400).build();
     }
 
     @Test
@@ -392,6 +398,71 @@ public class ClientSavingsIntegrationTest {
         this.savingsAccountHelper.waiveCharge((Integer) savingsChargeForWaive.get("id"), savingsId);
         HashMap waiveCharge = this.savingsAccountHelper.getSavingsCharge(savingsId, (Integer) savingsChargeForWaive.get("id"));
         assertEquals(savingsChargeForWaive.get("amount"), waiveCharge.get("amountWaived"));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSearchSavingsAccountTransactionsByPaymentDetails() {
+        this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
+        SavingsAccountHelper savingsAccountHelperValidationError = new SavingsAccountHelper(this.requestSpec,
+                new ResponseSpecBuilder().build());
+
+        final String codeValue = Utils.randomNameGenerator("CASH_", 5);
+        final int codeValuePosition = 0;
+        final String codeName = "PaymentType";
+
+        // Retrieve all Codes
+        final ArrayList<HashMap> retrieveAllCodes = (ArrayList) CodeHelper.getAllCodes(this.requestSpec, this.responseSpec);
+
+        final Integer paymentTypeCodeId = CodeHelper.getCodeByName(retrieveAllCodes, codeName);
+        Assert.assertNotNull("Code with name PaymentType not found", paymentTypeCodeId);
+
+        final Integer codeValueId = (Integer) CodeHelper.createCodeValue(this.requestSpec, this.responseSpec, paymentTypeCodeId, codeValue,
+                codeValuePosition, CodeHelper.SUBRESPONSE_ID_ATTRIBUTE_NAME);
+
+        final Integer clientID = ClientHelper.createClient(this.requestSpec, this.responseSpec);
+        Assert.assertNotNull(clientID);
+
+        final Integer savingsProductID = createSavingsProduct(this.requestSpec, this.responseSpec, MINIMUM_OPENING_BALANCE);
+        Assert.assertNotNull(savingsProductID);
+
+        final Integer savingsId = this.savingsAccountHelper.applyForSavingsApplication(clientID, savingsProductID, ACCOUNT_TYPE_INDIVIDUAL);
+        Assert.assertNotNull(savingsProductID);
+
+        HashMap savingsStatusHashMap = SavingsStatusChecker.getStatusOfSavings(this.requestSpec, this.responseSpec, savingsId);
+        SavingsStatusChecker.verifySavingsIsPending(savingsStatusHashMap);
+
+        savingsStatusHashMap = this.savingsAccountHelper.approveSavings(savingsId);
+        SavingsStatusChecker.verifySavingsIsApproved(savingsStatusHashMap);
+
+        savingsStatusHashMap = this.savingsAccountHelper.activateSavings(savingsId);
+        SavingsStatusChecker.verifySavingsIsActive(savingsStatusHashMap);
+
+        HashMap summary = this.savingsAccountHelper.getSavingsSummary(savingsId);
+        Float balance = new Float(MINIMUM_OPENING_BALANCE);
+        assertEquals("Verifying opening Balance", balance, summary.get("accountBalance"));
+
+        Integer depositTransactionId = (Integer) this.savingsAccountHelper.depositToSavingsAccountWithPaymentDetails(savingsId,
+                DEPOSIT_AMOUNT, SavingsAccountHelper.TRANSACTION_DATE, CommonConstants.RESPONSE_RESOURCE_ID, paymentTypeCodeId.toString(),
+                ACCOUNT_NUMBER, RECEIPT_NUMBER);
+        HashMap depositTransaction = this.savingsAccountHelper.getSavingsTransactionByPaymentDetails(savingsId, ACCOUNT_NUMBER,
+                RECEIPT_NUMBER);
+        Integer transactionId = (Integer) depositTransaction.get("id");
+        assertEquals("Verifying Transaction Id", depositTransactionId, transactionId);
+
+        List<HashMap> transactionErrorResponse = this.savingsAccountHelper.getSavingsTransactionByPaymentDetailsWithUnsupportedParam(
+                this.responseSpecWithFailure, savingsId, ACCOUNT_NUMBER, RECEIPT_NUMBER);
+        Assert.assertEquals("validation.msg.savingsaccount.accountNum.is.not.one.of.expected.enumerations", transactionErrorResponse.get(0)
+                .get(CommonConstants.RESPONSE_ERROR_MESSAGE_CODE));
+        Assert.assertEquals("validation.msg.savingsaccount.receiptNum.is.not.one.of.expected.enumerations", transactionErrorResponse.get(1)
+                .get(CommonConstants.RESPONSE_ERROR_MESSAGE_CODE));
+
+        transactionErrorResponse = this.savingsAccountHelper.getSavingsTransactionByPaymentDetailsWithoutQueryParamValue(
+                responseSpecWithFailure, savingsId, "", "");
+        Assert.assertEquals("validation.msg.savingsaccount.search.paramenter.value.required",
+                transactionErrorResponse.get(0).get(CommonConstants.RESPONSE_ERROR_MESSAGE_CODE));
+        Assert.assertEquals("validation.msg.savingsaccount.search.paramenter.value.required",
+                transactionErrorResponse.get(1).get(CommonConstants.RESPONSE_ERROR_MESSAGE_CODE));
     }
 
     private Integer createSavingsProduct(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,

@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
@@ -126,6 +128,31 @@ public class SavingsAccountTransactionDataValidator {
         baseDataValidator.reset().parameter(closedOnDateParamName).value(activationDate).notNull();
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    public void validateSearch(final MultivaluedMap<String, String> searchQueryParameters) {
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<ApiParameterError>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource(SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME);
+
+        if (searchQueryParameters.size() > 0) {
+
+            for (String queryParameter : searchQueryParameters.keySet()) {
+                if (!SavingsApiConstants.SAVINGS_ACCOUNT_TRANSACTION_SEARCH_REQUEST_DATA_PARAMETERS.contains(queryParameter.toString())) {
+                    baseDataValidator.reset().parameter(queryParameter).value(searchQueryParameters.getFirst(queryParameter))
+                            .isOneOfTheseValues(SavingsApiConstants.SAVINGS_ACCOUNT_TRANSACTION_SEARCH_REQUEST_DATA_PARAMETERS);
+                } else {
+                    String value = searchQueryParameters.getFirst(queryParameter);
+                    if (StringUtils.isEmpty(value)) {
+                        baseDataValidator.reset().parameter(queryParameter)
+                                .failWithCodeNoParameterAddedToErrorCode("search.paramenter.value.required", queryParameter);
+                    }
+                }
+            }
+
+            throwExceptionIfValidationWarningsExist(dataValidationErrors);
+        }
     }
 
     private void throwExceptionIfValidationWarningsExist(final List<ApiParameterError> dataValidationErrors) {

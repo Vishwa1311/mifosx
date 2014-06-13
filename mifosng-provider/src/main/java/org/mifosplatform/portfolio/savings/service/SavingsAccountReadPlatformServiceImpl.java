@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.codes.data.CodeValueData;
@@ -107,7 +109,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         final Object[] queryParameters = new Object[] { clientId };
         return this.jdbcTemplate.query(sqlBuilder.toString(), this.savingAccountMapper, queryParameters);
     }
-    
+
     @Override
     public Collection<SavingsAccountData> retrieveActiveForLookup(final Long clientId, DepositAccountType depositAccountType) {
 
@@ -583,12 +585,14 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     }
 
     @Override
-    public SavingsAccountTransactionData retrieveDepositTransactionTemplate(final Long savingsId, final DepositAccountType depositAccountType) {
+    public SavingsAccountTransactionData retrieveDepositTransactionTemplate(final Long savingsId,
+            final DepositAccountType depositAccountType) {
 
         try {
             final String sql = "select " + this.transactionTemplateMapper.schema() + " where sa.id = ? and sa.deposit_type_enum = ?";
 
-            return this.jdbcTemplate.queryForObject(sql, this.transactionTemplateMapper, new Object[] { savingsId,  depositAccountType.getValue()});
+            return this.jdbcTemplate.queryForObject(sql, this.transactionTemplateMapper,
+                    new Object[] { savingsId, depositAccountType.getValue() });
         } catch (final EmptyResultDataAccessException e) {
             throw new SavingsAccountNotFoundException(savingsId);
         }
@@ -604,11 +608,33 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     }
 
     @Override
-    public SavingsAccountTransactionData retrieveSavingsTransaction(final Long savingsId, final Long transactionId, DepositAccountType depositAccountType) {
+    public SavingsAccountTransactionData retrieveSavingsTransaction(final Long savingsId, final Long transactionId,
+            DepositAccountType depositAccountType) {
 
         final String sql = "select " + this.transactionsMapper.schema() + " where sa.id = ? and sa.deposit_type_enum = ? and tr.id= ?";
 
-        return this.jdbcTemplate.queryForObject(sql, this.transactionsMapper, new Object[] { savingsId, depositAccountType.getValue(), transactionId });
+        return this.jdbcTemplate.queryForObject(sql, this.transactionsMapper, new Object[] { savingsId, depositAccountType.getValue(),
+                transactionId });
+    }
+
+    @Override
+    public Collection<SavingsAccountTransactionData> searchSavingsTransactionByPaymentDetail(final Long savingsId,
+            DepositAccountType depositAccountType, MultivaluedMap<String, String> searchQueryParam) {
+        String accountNumber = null;
+        String receiptNumber = null;
+        final StringBuilder sqlBuilder = new StringBuilder(600);
+        sqlBuilder.append("select " + this.transactionsMapper.schema() + " where sa.id = ? and sa.deposit_type_enum = ? ");
+        if (searchQueryParam.containsKey("accountNumber")) {
+            accountNumber = searchQueryParam.getFirst("accountNumber");
+            sqlBuilder.append("and pd.account_number = " + accountNumber);
+        }
+
+        if (searchQueryParam.containsKey("receiptNumber")) {
+            receiptNumber = searchQueryParam.getFirst("receiptNumber");
+            sqlBuilder.append(" and pd.receipt_number = " + receiptNumber);
+        }
+        return this.jdbcTemplate.query(sqlBuilder.toString(), this.transactionsMapper,
+                new Object[] { savingsId, depositAccountType.getValue() });
     }
 
     /*

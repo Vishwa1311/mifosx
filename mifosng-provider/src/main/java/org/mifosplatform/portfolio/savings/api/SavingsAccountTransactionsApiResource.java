@@ -16,6 +16,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
@@ -34,6 +35,7 @@ import org.mifosplatform.portfolio.paymentdetail.PaymentDetailConstants;
 import org.mifosplatform.portfolio.savings.DepositAccountType;
 import org.mifosplatform.portfolio.savings.SavingsApiConstants;
 import org.mifosplatform.portfolio.savings.data.SavingsAccountTransactionData;
+import org.mifosplatform.portfolio.savings.data.SavingsAccountTransactionDataValidator;
 import org.mifosplatform.portfolio.savings.service.SavingsAccountReadPlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -50,6 +52,7 @@ public class SavingsAccountTransactionsApiResource {
     private final ApiRequestParameterHelper apiRequestParameterHelper;
     private final SavingsAccountReadPlatformService savingsAccountReadPlatformService;
     private final CodeValueReadPlatformService codeValueReadPlatformService;
+    private final SavingsAccountTransactionDataValidator savingsAccountTransactionDataValidator;
 
     @Autowired
     public SavingsAccountTransactionsApiResource(final PlatformSecurityContext context,
@@ -57,13 +60,14 @@ public class SavingsAccountTransactionsApiResource {
             final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService,
             final ApiRequestParameterHelper apiRequestParameterHelper,
             final SavingsAccountReadPlatformService savingsAccountReadPlatformService,
-            final CodeValueReadPlatformService codeValueReadPlatformService) {
+            final CodeValueReadPlatformService codeValueReadPlatformService, final SavingsAccountTransactionDataValidator savingsAccountTransactionDataValidator) {
         this.context = context;
         this.toApiJsonSerializer = toApiJsonSerializer;
         this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
         this.apiRequestParameterHelper = apiRequestParameterHelper;
         this.savingsAccountReadPlatformService = savingsAccountReadPlatformService;
         this.codeValueReadPlatformService = codeValueReadPlatformService;
+        this.savingsAccountTransactionDataValidator = savingsAccountTransactionDataValidator;
     }
 
     private boolean is(final String commandParam, final String commandValue) {
@@ -82,7 +86,8 @@ public class SavingsAccountTransactionsApiResource {
 
         // FIXME - KW - for now just send back generic default information for
         // both deposit/withdrawal templates
-        SavingsAccountTransactionData savingsAccount = this.savingsAccountReadPlatformService.retrieveDepositTransactionTemplate(savingsId, DepositAccountType.SAVINGS_DEPOSIT);
+        SavingsAccountTransactionData savingsAccount = this.savingsAccountReadPlatformService.retrieveDepositTransactionTemplate(savingsId,
+                DepositAccountType.SAVINGS_DEPOSIT);
         final Collection<CodeValueData> paymentTypeOptions = this.codeValueReadPlatformService
                 .retrieveCodeValuesByCode(PaymentDetailConstants.paymentTypeCodeName);
         savingsAccount = SavingsAccountTransactionData.templateOnTop(savingsAccount, paymentTypeOptions);
@@ -167,5 +172,23 @@ public class SavingsAccountTransactionsApiResource {
         }
 
         return this.toApiJsonSerializer.serialize(result);
+    }
+
+    @GET
+    @Path("search")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    public String searchTransaction(@PathParam("savingsId") final Long savingsId, @Context final UriInfo uriInfo) {
+
+        this.context.authenticatedUser().validateHasReadPermission(SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME);
+        final MultivaluedMap<String, String> searchQueryParameters = uriInfo.getQueryParameters();
+        this.savingsAccountTransactionDataValidator.validateSearch(searchQueryParameters);
+        Collection<SavingsAccountTransactionData> transactionData = this.savingsAccountReadPlatformService.searchSavingsTransactionByPaymentDetail(
+                savingsId, DepositAccountType.SAVINGS_DEPOSIT, searchQueryParameters);
+
+        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+        
+        return this.toApiJsonSerializer.serialize(settings, transactionData,
+                SavingsApiConstants.SAVINGS_TRANSACTION_RESPONSE_DATA_PARAMETERS);
     }
 }
