@@ -29,8 +29,8 @@ public class SavingsAccountHelper {
     private static final String POST_INTEREST_SAVINGS_COMMAND = "postInterest";
     private static final String CLOSE_SAVINGS_COMMAND = "close";
 
-    private static final String DEPOSIT_SAVINGS_COMMAND = "deposit";
-    private static final String WITHDRAW_SAVINGS_COMMAND = "withdrawal";
+    public static final String DEPOSIT_SAVINGS_COMMAND = "deposit";
+    public static final String WITHDRAW_SAVINGS_COMMAND = "withdrawal";
     private static final String MODIFY_TRASACTION_COMMAND = "modify";
     private static final String UNDO_TRASACTION_COMMAND = "undo";
 
@@ -39,6 +39,10 @@ public class SavingsAccountHelper {
     public static final String CREATED_DATE_MINUS_ONE = "07 January 2013";
     public static final String TRANSACTION_DATE = "01 March 2013";
     public static final String LAST_TRANSACTION_DATE = "01 March 2013";
+    
+    public static final Float TRANSACTION_CHARGE_AMOUNT_1 = 10.0f;
+    public static final Float TRANSACTION_CHARGE_AMOUNT_2 = 20.0f;
+    public static final Float TRANSACTION_CHARGE_AMOUNT_3 = 30.0f;
 
     public SavingsAccountHelper(final RequestSpecification requestSpec, final ResponseSpecification responseSpec) {
         this.requestSpec = requestSpec;
@@ -128,6 +132,16 @@ public class SavingsAccountHelper {
                 .println("--------------------------------- SAVINGS TRANSACTION DEPOSIT WITH PAYMENT TYPE --------------------------------");
         return performSavingActions(createSavingsTransactionURL(DEPOSIT_SAVINGS_COMMAND, savingsID),
                 getSavingsTransactionWithPaymentTypeJSON(amount, date, paymentTypeId), jsonAttributeToGetback);
+    }
+
+    public Object savingsDepositAndWithDrawalWithMultipleCharges(final String command, final int savingsId, final String amount,
+            final String transactionDate, final int paymentTypeId, final int chargeId1, final int chargeId2, final int chargeId3, String jsonAttributeToGetback) {
+        System.out
+                .println("---------------------------- Savings Deposit and Withdrawal Transactions with multiple charges--------------------------");
+
+        return performSavingActions(createSavingsTransactionURL(command, savingsId),
+                getSavingsTransactionWithMultipleCharges(amount, transactionDate, paymentTypeId, chargeId1, chargeId2, chargeId3),
+                jsonAttributeToGetback);
     }
 
     public Object withdrawalFromSavingsAccount(final Integer savingsId, final String amount, String date, String jsonAttributeToGetback) {
@@ -259,6 +273,42 @@ public class SavingsAccountHelper {
         String savingsAccountWithdrawalJson = new Gson().toJson(map);
         System.out.println(savingsAccountWithdrawalJson);
         return savingsAccountWithdrawalJson;
+    }
+
+    private String getSavingsTransactionWithMultipleCharges(final String amount, final String transactionDate, final int paymentTypeId,
+            final int chargeId1, final int chargeId2, final int chargeId3) {
+        final HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("locale", "en");
+        map.put("dateFormat", CommonConstants.dateFormat);
+        map.put("transactionDate", transactionDate);
+        map.put("transactionAmount", amount);
+        map.put("paymentTypeId", paymentTypeId);
+        map.put("accountNumber", "acc123");
+        map.put("checkNumber", "che123");
+        map.put("routingCode", "rou123");
+        map.put("receiptNumber", "rec123");
+        map.put("bankNumber", "ban123");
+
+        final ArrayList<HashMap<String, Object>> charges = new ArrayList<HashMap<String, Object>>();
+        final HashMap<String, Object> chargesMap1 = new HashMap<String, Object>();
+        chargesMap1.put("chargeId", chargeId1);
+        chargesMap1.put("amount", TRANSACTION_CHARGE_AMOUNT_1);
+        charges.add(chargesMap1);
+
+        final HashMap<String, Object> chargesMap2 = new HashMap<String, Object>();
+        chargesMap2.put("chargeId", chargeId2);
+        chargesMap2.put("amount", TRANSACTION_CHARGE_AMOUNT_2);
+        charges.add(chargesMap2);
+
+        final HashMap<String, Object> chargesMap3 = new HashMap<String, Object>();
+        chargesMap3.put("chargeId", chargeId3);
+        chargesMap3.put("amount", TRANSACTION_CHARGE_AMOUNT_3);
+        charges.add(chargesMap3);
+        map.put("charges", charges);
+
+        String savingsTransactionsWithMultipleCharges = new Gson().toJson(map);
+        System.out.println(savingsTransactionsWithMultipleCharges);
+        return savingsTransactionsWithMultipleCharges;
     }
 
     private String getCalculatedInterestForSavingsApplicationAsJSON() {

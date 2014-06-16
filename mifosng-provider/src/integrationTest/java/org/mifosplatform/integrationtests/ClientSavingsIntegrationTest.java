@@ -475,6 +475,116 @@ public class ClientSavingsIntegrationTest {
 
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testDepositAndWithdrawalTransactionsWithMultipleCharges() {
+        this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
+        SavingsAccountHelper savingsAccountHelperValidationError = new SavingsAccountHelper(this.requestSpec,
+                new ResponseSpecBuilder().build());
+
+        final String codeValue1 = Utils.randomNameGenerator("CASH_", 5);
+        final String codeValue2 = Utils.randomNameGenerator("CHEQUE_", 5);
+        final int codeValuePosition = 0;
+        final String codeName = "PaymentType";
+
+        // Retrieve All Codes
+        final ArrayList<HashMap> retrieveAllCodes = (ArrayList) CodeHelper.getAllCodes(this.requestSpec, this.responseSpec);
+
+        Integer paymentTypeCodeId = CodeHelper.getCodeByName(retrieveAllCodes, codeName);
+        Assert.assertNotNull("Code with name PaymentType not found", paymentTypeCodeId);
+
+        final Integer paymentTypeId1 = (Integer) CodeHelper.createCodeValue(this.requestSpec, this.responseSpec, paymentTypeCodeId,
+                codeValue1, codeValuePosition, CodeHelper.SUBRESPONSE_ID_ATTRIBUTE_NAME);
+
+        final Integer paymentTypeId2 = (Integer) CodeHelper.createCodeValue(this.requestSpec, this.responseSpec, paymentTypeCodeId,
+                codeValue2, codeValuePosition, CodeHelper.SUBRESPONSE_ID_ATTRIBUTE_NAME);
+
+        final Integer clientID = ClientHelper.createClient(this.requestSpec, this.responseSpec);
+        Assert.assertNotNull(clientID);
+
+        final Integer savingsProductID = createSavingsProduct(this.requestSpec, this.responseSpec, MINIMUM_OPENING_BALANCE);
+        Assert.assertNotNull(savingsProductID);
+
+        final Integer savingsId = this.savingsAccountHelper.applyForSavingsApplication(clientID, savingsProductID, ACCOUNT_TYPE_INDIVIDUAL);
+        Assert.assertNotNull(savingsProductID);
+
+        HashMap savingsStatusHashMap = SavingsStatusChecker.getStatusOfSavings(this.requestSpec, this.responseSpec, savingsId);
+        SavingsStatusChecker.verifySavingsIsPending(savingsStatusHashMap);
+
+        final Integer depositFeeChargeId1 = (Integer) ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON(paymentTypeId1, ChargesHelper.CHARGE_DEPOSIT_FEE),
+                CommonConstants.RESPONSE_RESOURCE_ID);
+        Assert.assertNotNull(depositFeeChargeId1);
+
+        final Integer depositFeeChargeId2 = (Integer) ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON(paymentTypeId1, ChargesHelper.CHARGE_DEPOSIT_FEE),
+                CommonConstants.RESPONSE_RESOURCE_ID);
+        Assert.assertNotNull(depositFeeChargeId2);
+
+        final Integer depositFeeChargeId3 = (Integer) ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON(paymentTypeId1, ChargesHelper.CHARGE_DEPOSIT_FEE),
+                CommonConstants.RESPONSE_RESOURCE_ID);
+        Assert.assertNotNull(depositFeeChargeId3);
+
+        final Integer withdrawalFeeChargeId1 = (Integer) ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON(paymentTypeId1, ChargesHelper.CHARGE_WITHDRAWAL_FEE),
+                CommonConstants.RESPONSE_RESOURCE_ID);
+        Assert.assertNotNull(withdrawalFeeChargeId1);
+
+        final Integer withdrawalFeeChargeId2 = (Integer) ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON(paymentTypeId1, ChargesHelper.CHARGE_WITHDRAWAL_FEE),
+                CommonConstants.RESPONSE_RESOURCE_ID);
+        Assert.assertNotNull(withdrawalFeeChargeId2);
+
+        final Integer withdrawalFeeChargeId3 = (Integer) ChargesHelper.createCharges(this.requestSpec, this.responseSpec,
+                ChargesHelper.getSavingsChargesWithAdvancedConfigDataAsJSON(paymentTypeId1, ChargesHelper.CHARGE_WITHDRAWAL_FEE),
+                CommonConstants.RESPONSE_RESOURCE_ID);
+        Assert.assertNotNull(withdrawalFeeChargeId3);
+
+        savingsStatusHashMap = this.savingsAccountHelper.approveSavings(savingsId);
+        SavingsStatusChecker.verifySavingsIsApproved(savingsStatusHashMap);
+
+        savingsStatusHashMap = this.savingsAccountHelper.activateSavings(savingsId);
+        SavingsStatusChecker.verifySavingsIsActive(savingsStatusHashMap);
+
+        final Integer depositTransactionId = (Integer) this.savingsAccountHelper.savingsDepositAndWithDrawalWithMultipleCharges(
+                SavingsAccountHelper.DEPOSIT_SAVINGS_COMMAND, savingsId, DEPOSIT_AMOUNT, SavingsAccountHelper.TRANSACTION_DATE,
+                paymentTypeId1, depositFeeChargeId1, depositFeeChargeId2, depositFeeChargeId3, CommonConstants.RESPONSE_RESOURCE_ID);
+
+        final Float totalTransactionCharge = SavingsAccountHelper.TRANSACTION_CHARGE_AMOUNT_1
+                + SavingsAccountHelper.TRANSACTION_CHARGE_AMOUNT_2 + SavingsAccountHelper.TRANSACTION_CHARGE_AMOUNT_3;
+
+        final Float minBalance = new Float(MINIMUM_OPENING_BALANCE);
+        final Float depositAmount = new Float(DEPOSIT_AMOUNT);
+        final Float balanceAfterDeposit = (minBalance + depositAmount) - totalTransactionCharge;
+
+        HashMap savingsSummary = this.savingsAccountHelper.getSavingsSummary(savingsId);
+        Assert.assertEquals(totalTransactionCharge, savingsSummary.get("totalFeeCharge"));
+        Assert.assertEquals("Verifying account balance after successful completion of deposit", balanceAfterDeposit,
+                savingsSummary.get("accountBalance"));
+
+        final Integer withdrawalTransactionId = (Integer) this.savingsAccountHelper.savingsDepositAndWithDrawalWithMultipleCharges(
+                SavingsAccountHelper.WITHDRAW_SAVINGS_COMMAND, savingsId, WITHDRAW_AMOUNT, SavingsAccountHelper.TRANSACTION_DATE,
+                paymentTypeId1, withdrawalFeeChargeId1, withdrawalFeeChargeId2, withdrawalFeeChargeId3,
+                CommonConstants.RESPONSE_RESOURCE_ID);
+
+        final Float withdrawalAmount = new Float(WITHDRAW_AMOUNT);
+        final Float balanceAfterWithdrawal = (balanceAfterDeposit - withdrawalAmount - totalTransactionCharge);
+        savingsSummary = this.savingsAccountHelper.getSavingsSummary(savingsId);
+
+        Assert.assertEquals(totalTransactionCharge, savingsSummary.get("totalWithdrawalFees"));
+        Assert.assertEquals("Verifying account balance after successful completion of Withdrawal", balanceAfterWithdrawal,
+                savingsSummary.get("accountBalance"));
+
+        ArrayList<HashMap> errorResponse = (ArrayList) savingsAccountHelperValidationError.savingsDepositAndWithDrawalWithMultipleCharges(
+                SavingsAccountHelper.DEPOSIT_SAVINGS_COMMAND, savingsId, DEPOSIT_AMOUNT, SavingsAccountHelper.TRANSACTION_DATE,
+                paymentTypeId2, depositFeeChargeId1, depositFeeChargeId2, depositFeeChargeId3, CommonConstants.RESPONSE_ERROR);
+        for (int i = 0; i < errorResponse.size(); i++) {
+            Assert.assertEquals("validation.msg.savingsaccount.chargeId.not.linked.to.payment.type",
+                    errorResponse.get(i).get("userMessageGlobalisationCode"));
+        }
+    }
+
     private Integer createSavingsProduct(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
             final String minOpenningBalance) {
         System.out.println("------------------------------CREATING NEW SAVINGS PRODUCT ---------------------------------------");
