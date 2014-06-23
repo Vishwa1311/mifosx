@@ -3,8 +3,10 @@ package org.mifosplatform.integrationtests.common.accounting;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.mifosplatform.integrationtests.common.CommonConstants;
 import org.mifosplatform.integrationtests.common.Utils;
 
+import com.google.gson.Gson;
 import com.jayway.restassured.specification.RequestSpecification;
 import com.jayway.restassured.specification.ResponseSpecification;
 
@@ -49,17 +51,37 @@ public class AccountHelper {
                 assetAccountJSON, this.GL_ACCOUNT_ID_RESPONSE);
         return new Account(accountID, Account.AccountType.LIABILITY);
     }
-    
+
     public ArrayList getAccountingWithRunningBalances() {
         final String GET_RUNNING_BALANCE_URL = "/mifosng-provider/api/v1/glaccounts?fetchRunningBalance=true";
-        final ArrayList<HashMap> accountRunningBalance = Utils.performServerGet(this.requestSpec, this.responseSpec, GET_RUNNING_BALANCE_URL, "");
+        final ArrayList<HashMap> accountRunningBalance = Utils.performServerGet(this.requestSpec, this.responseSpec,
+                GET_RUNNING_BALANCE_URL, "");
         return accountRunningBalance;
     }
-    
+
     public HashMap getAccountingWithRunningBalanceById(final String accountId) {
         final String GET_RUNNING_BALANCE_URL = "/mifosng-provider/api/v1/glaccounts/" + accountId + "?fetchRunningBalance=true";
         final HashMap accountRunningBalance = Utils.performServerGet(this.requestSpec, this.responseSpec, GET_RUNNING_BALANCE_URL, "");
         return accountRunningBalance;
+    }
+
+    public Integer createAccountingRules(final Integer accountToDebitId, final Integer accountToCreditId) {
+        final String GET_RUNNING_BALANCE_URL = "/mifosng-provider/api/v1/accountingrules?tenantIdentifier=default";
+        final Integer response = Utils.performServerPost(this.requestSpec, this.responseSpec, GET_RUNNING_BALANCE_URL,
+                getAccountingRuleAsJSON(accountToDebitId, accountToCreditId), CommonConstants.RESPONSE_RESOURCE_ID);
+        return response;
+    }
+
+    private String getAccountingRuleAsJSON(final Integer accountToDebitId, final Integer accountToCreditId) {
+        final HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("name", Utils.randomNameGenerator("HOME_RENT_", 5));
+        map.put("officeId", 1);
+        map.put("description", Utils.randomNameGenerator("DESC_", 5));
+        map.put("accountToDebit", accountToDebitId);
+        map.put("accountToCredit", accountToCreditId);
+        String accountingRuleJSON = new Gson().toJson(map);
+        System.out.println(accountingRuleJSON);
+        return accountingRuleJSON;
     }
 
 }
