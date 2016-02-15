@@ -6,9 +6,11 @@
 package org.mifosplatform.portfolio.loanaccount.loanschedule.domain;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.joda.time.LocalDate;
 import org.mifosplatform.organisation.monetary.domain.Money;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanInterestRecalcualtionAdditionalDetails;
 import org.mifosplatform.portfolio.loanaccount.loanschedule.data.LoanSchedulePeriodData;
 
 /**
@@ -108,5 +110,10 @@ public final class LoanScheduleModelDisbursementPeriod implements LoanScheduleMo
     @Override
     public void addInterestAmount(@SuppressWarnings("unused") Money principalDue) {
         return;
+    }
+
+    @Override
+    public List<LoanInterestRecalcualtionAdditionalDetails> getLoanCompoundingDetails() {
+        return null;
     }
 }

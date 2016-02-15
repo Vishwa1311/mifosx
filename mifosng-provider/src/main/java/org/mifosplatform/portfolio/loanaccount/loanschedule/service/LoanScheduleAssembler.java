@@ -244,12 +244,11 @@ public class LoanScheduleAssembler {
             validateRepaymentFrequencyIsSameAsMeetingFrequency(meetingPeriodFrequency.getValue(), repaymentFrequencyType,
                     CalendarUtils.getInterval(calendar.getRecurrence()), repaymentEvery);
         } else {
-        	if(repaymentPeriodFrequencyType == PeriodFrequencyType.MONTHS && nthDay != null && nthDay != NthDayType.INVALID.getValue()) {
-        		LocalDate calendarStartDate = repaymentsStartingFromDate;
-            	if(calendarStartDate == null)
-            		calendarStartDate = expectedDisbursementDate;
-            	calendar = createLoanCalendar(calendarStartDate, repaymentEvery, CalendarFrequencyType.MONTHLY, dayOfWeek, nthDay);
-        	}
+            if (repaymentPeriodFrequencyType == PeriodFrequencyType.MONTHS && nthDay != null && nthDay != NthDayType.INVALID.getValue()) {
+                LocalDate calendarStartDate = repaymentsStartingFromDate;
+                if (calendarStartDate == null) calendarStartDate = expectedDisbursementDate;
+                calendar = createLoanCalendar(calendarStartDate, repaymentEvery, CalendarFrequencyType.MONTHLY, dayOfWeek, nthDay);
+            }
         }
 
         /*
@@ -311,6 +310,8 @@ public class LoanScheduleAssembler {
         CalendarInstance restCalendarInstance = null;
         RecalculationFrequencyType compoundingFrequencyType = null;
         CalendarInstance compoundingCalendarInstance = null;
+        InterestRecalculationCompoundingMethod compoundingMethod = null;
+
         if (isInterestRecalculationEnabled) {
             LoanProductInterestRecalculationDetails loanProductInterestRecalculationDetails = loanProduct
                     .getProductInterestRecalculationDetails();
@@ -327,8 +328,8 @@ public class LoanScheduleAssembler {
                 restCalendarInstance = createInterestRecalculationCalendarInstance(calendarStartDate, recalculationFrequencyType,
                         loanProductInterestRecalculationDetails.getRestInterval());
             }
-            InterestRecalculationCompoundingMethod compoundingMethod = InterestRecalculationCompoundingMethod
-                    .fromInt(loanProductInterestRecalculationDetails.getInterestRecalculationCompoundingMethod());
+            compoundingMethod = InterestRecalculationCompoundingMethod.fromInt(loanProductInterestRecalculationDetails
+                    .getInterestRecalculationCompoundingMethod());
             if (compoundingMethod.isCompoundingEnabled()) {
                 compoundingFrequencyType = loanProductInterestRecalculationDetails.getCompoundingFrequencyType();
                 if (compoundingFrequencyType.isSameAsRepayment()) {
@@ -381,7 +382,7 @@ public class LoanScheduleAssembler {
                 loanTermVariations.add(loanTermVariation);
             }
         }
-        
+
         final Long clientId = this.fromApiJsonHelper.extractLongNamed("clientId", element);
         final Long groupId = this.fromApiJsonHelper.extractLongNamed("groupId", element);
 
@@ -409,7 +410,7 @@ public class LoanScheduleAssembler {
                 calculatedRepaymentsStartingFromDate, graceOnPrincipalPayment, graceOnInterestPayment, graceOnInterestCharged,
                 interestChargedFromDate, inArrearsToleranceMoney, loanProduct.isMultiDisburseLoan(), emiAmount, disbursementDatas,
                 maxOutstandingBalance, graceOnArrearsAgeing, daysInMonthType, daysInYearType, isInterestRecalculationEnabled,
-                recalculationFrequencyType, restCalendarInstance, compoundingCalendarInstance, compoundingFrequencyType,
+                recalculationFrequencyType, restCalendarInstance, compoundingMethod, compoundingCalendarInstance, compoundingFrequencyType,
                 principalThresholdForLastInstalment, installmentAmountInMultiplesOf, loanProduct.preCloseInterestCalculationStrategy(),
                 calendar, BigDecimal.ZERO, loanTermVariations, detailDTO);
     }
@@ -451,7 +452,7 @@ public class LoanScheduleAssembler {
                 calendarFrequencyType, frequency, repeatsOnDay, null);
         return CalendarInstance.from(calendar, null, CalendarEntityType.LOAN_RECALCULATION_REST_DETAIL.getValue());
     }
-    
+
     private Calendar createLoanCalendar(final LocalDate calendarStartDate, final Integer frequency,
             CalendarFrequencyType calendarFrequencyType, final Integer repeatsOnDay, final Integer repeatsOnNthDayOfMonth) {
         final String title = "loan_schedule";

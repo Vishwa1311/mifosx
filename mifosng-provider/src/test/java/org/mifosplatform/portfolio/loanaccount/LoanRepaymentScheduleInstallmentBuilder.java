@@ -5,10 +5,13 @@
  */
 package org.mifosplatform.portfolio.loanaccount;
 
+import java.util.List;
+
 import org.joda.time.LocalDate;
 import org.mifosplatform.organisation.monetary.domain.MonetaryCurrency;
 import org.mifosplatform.organisation.monetary.domain.Money;
 import org.mifosplatform.portfolio.loanaccount.domain.Loan;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanInterestRecalcualtionAdditionalDetails;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
 
 public class LoanRepaymentScheduleInstallmentBuilder {
@@ -33,9 +36,10 @@ public class LoanRepaymentScheduleInstallmentBuilder {
     }
 
     public LoanRepaymentScheduleInstallment build() {
+        final List<LoanInterestRecalcualtionAdditionalDetails> compoundingDetails = null;
         final LoanRepaymentScheduleInstallment installment = new LoanRepaymentScheduleInstallment(this.loan, this.installmentNumber,
                 this.fromDate, this.dueDate, this.principal.getAmount(), this.interest.getAmount(), this.feeCharges.getAmount(),
-                this.penaltyCharges.getAmount(), this.recalculatedInterestComponent);
+                this.penaltyCharges.getAmount(), this.recalculatedInterestComponent, compoundingDetails);
         if (this.completed) {
             installment.payPrincipalComponent(this.latestTransactionDate, this.principal);
             installment.payInterestComponent(this.latestTransactionDate, this.interest);

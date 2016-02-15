@@ -1148,7 +1148,7 @@ public final class LoanApplicationCommandFromApiJsonHelper {
 
         final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loan");
         baseDataValidator.reset().parameter(paramName).value(recalculationFrequencyDate).notNull()
-                .validateDateForEqual(expectedDisbursementDate);
+                .validateDateBeforeOrEqual(expectedDisbursementDate);
     }
 
     private void validatePartialPeriodSupport(final Integer interestCalculationPeriodType, final DataValidatorBuilder baseDataValidator,

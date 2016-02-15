@@ -3547,8 +3547,8 @@ public class ClientLoanIntegrationTest {
         paymentday.put("penaltyChargesDue", "0");
         addRepaymentValues(expectedvalues, todaysDate, -1, false, "2482.76", "46.15", "0.0", "0.0");
         expectedvalues.add(paymentday);
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2517.28", "11.63", "0.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "1009.87", "4.66", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2517.31", "11.6", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "1009.84", "4.66", "0.0", "0.0");
         verifyLoanRepaymentSchedule(loanSchedule, expectedvalues);
 
         HashMap prepayDetail = this.loanTransactionHelper.getPrepayAmount(this.requestSpec, this.responseSpec, loanID);
@@ -3609,9 +3609,9 @@ public class ClientLoanIntegrationTest {
         List<Map<String, Object>> expectedvalues = new ArrayList<>();
         todaysDate = Calendar.getInstance(Utils.getTimeZoneOfTenant());
         addRepaymentValues(expectedvalues, todaysDate, -1, false, "2482.76", "46.15", "100.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2486.03", "42.88", "0.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2497.5", "31.41", "200", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2533.71", "19.93", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2485.55", "43.36", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2497.34", "31.57", "200", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2534.35", "20.69", "0.0", "0.0");
         verifyLoanRepaymentSchedule(loanSchedule, expectedvalues);
 
         System.out.println("-----------------------------------APPROVE LOAN-----------------------------------------");
@@ -3628,8 +3628,8 @@ public class ClientLoanIntegrationTest {
         todaysDate = Calendar.getInstance(Utils.getTimeZoneOfTenant());
         addRepaymentValues(expectedvalues, todaysDate, -1, false, "2482.76", "46.15", "100.0", "0.0");
         addRepaymentValues(expectedvalues, todaysDate, 1, false, "2482.08", "46.83", "0.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2488.82", "40.09", "200", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2546.34", "19.96", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2488.67", "40.24", "200", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2546.49", "20.75", "0.0", "0.0");
 
         verifyLoanRepaymentSchedule(loanSchedule, expectedvalues);
 
@@ -3643,9 +3643,9 @@ public class ClientLoanIntegrationTest {
         expectedvalues = new ArrayList<>();
         todaysDate = Calendar.getInstance(Utils.getTimeZoneOfTenant());
         addRepaymentValues(expectedvalues, todaysDate, -1, false, "2482.76", "46.15", "100.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2486.03", "42.88", "0.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2497.5", "31.41", "200", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2533.71", "19.93", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2485.55", "43.36", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2497.34", "31.57", "200", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2534.35", "20.69", "0.0", "0.0");
         verifyLoanRepaymentSchedule(loanSchedule, expectedvalues);
 
         Float earlyPayment = new Float("5100");
@@ -3658,9 +3658,9 @@ public class ClientLoanIntegrationTest {
         expectedvalues = new ArrayList<>();
         todaysDate = Calendar.getInstance(Utils.getTimeZoneOfTenant());
         addRepaymentValues(expectedvalues, todaysDate, -1, false, "2482.76", "46.15", "100.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "5100.0", "36.16", "0.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "0", "11.16", "200", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2417.24", "11.16", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "5100.0", "36.64", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "0", "11.28", "200", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2417.24", "11.86", "0.0", "0.0");
         verifyLoanRepaymentSchedule(loanSchedule, expectedvalues);
 
         HashMap prepayDetail = this.loanTransactionHelper.getPrepayAmount(this.requestSpec, this.responseSpec, loanID);
@@ -3676,7 +3676,7 @@ public class ClientLoanIntegrationTest {
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_WEEKLY_INTEREST_COMPOUND_INTEREST_FEE_STRATEGY_REDUCE_NEXT_INSTALLMENTS_PRE_CLOSE_INTEREST_PRE_CLOSE_DATE() {
         String preCloseInterestStrategy = LoanProductTestBuilder.INTEREST_APPLICABLE_STRATEGY_ON_PRE_CLOSE_DATE;
-        String preCloseAmount = "7766.82";
+        String preCloseAmount = "7767.11";
         testLoanScheduleWithInterestRecalculation_WITH_REST_WEEKLY_INTEREST_COMPOUND_INTEREST_FEE_STRATEGY_REDUCE_NEXT_INSTALLMENTS_PRE_CLOSE_INTEREST(
                 preCloseInterestStrategy, preCloseAmount);
 
@@ -3685,7 +3685,7 @@ public class ClientLoanIntegrationTest {
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_WEEKLY_INTEREST_COMPOUND_INTEREST_FEE_STRATEGY_REDUCE_NEXT_INSTALLMENTS_PRE_CLOSE_INTEREST_REST_DATE() {
         String preCloseInterestStrategy = LoanProductTestBuilder.INTEREST_APPLICABLE_STRATEGY_REST_DATE;
-        String preCloseAmount = "7771.8";
+        String preCloseAmount = "7772.09";
         testLoanScheduleWithInterestRecalculation_WITH_REST_WEEKLY_INTEREST_COMPOUND_INTEREST_FEE_STRATEGY_REDUCE_NEXT_INSTALLMENTS_PRE_CLOSE_INTEREST(
                 preCloseInterestStrategy, preCloseAmount);
 
@@ -3738,9 +3738,9 @@ public class ClientLoanIntegrationTest {
         List<Map<String, Object>> expectedvalues = new ArrayList<>();
         todaysDate = Calendar.getInstance(Utils.getTimeZoneOfTenant());
         addRepaymentValues(expectedvalues, todaysDate, -9, true, "2482.76", "46.15", "100.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2489.3", "39.61", "0.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2500.78", "28.13", "200", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2527.16", "16.62", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2489.01", "39.9", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2500.7", "28.21", "200", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2527.53", "17.07", "0.0", "0.0");
         verifyLoanRepaymentSchedule(loanSchedule, expectedvalues);
 
         System.out.println("-----------------------------------APPROVE LOAN-----------------------------------------");
@@ -3758,7 +3758,7 @@ public class ClientLoanIntegrationTest {
         addRepaymentValues(expectedvalues, todaysDate, -9, true, "2482.76", "46.15", "100.0", "0.0");
         addRepaymentValues(expectedvalues, todaysDate, 1, false, "2482.08", "46.83", "0.0", "0.0");
         addRepaymentValues(expectedvalues, todaysDate, 1, false, "2495.47", "33.44", "200", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2539.69", "16.66", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2539.69", "17.12", "0.0", "0.0");
 
         verifyLoanRepaymentSchedule(loanSchedule, expectedvalues);
 
@@ -3772,9 +3772,9 @@ public class ClientLoanIntegrationTest {
         expectedvalues = new ArrayList<>();
         todaysDate = Calendar.getInstance(Utils.getTimeZoneOfTenant());
         addRepaymentValues(expectedvalues, todaysDate, -9, true, "2482.76", "46.15", "100.0", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2489.3", "39.61", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2489.01", "39.9", "0.0", "0.0");
         addRepaymentValues(expectedvalues, todaysDate, 1, false, "2500.7", "28.21", "200", "0.0");
-        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2527.24", "16.62", "0.0", "0.0");
+        addRepaymentValues(expectedvalues, todaysDate, 1, false, "2527.53", "17.07", "0.0", "0.0");
         verifyLoanRepaymentSchedule(loanSchedule, expectedvalues);
 
         HashMap prepayDetail = this.loanTransactionHelper.getPrepayAmount(this.requestSpec, this.responseSpec, loanID);

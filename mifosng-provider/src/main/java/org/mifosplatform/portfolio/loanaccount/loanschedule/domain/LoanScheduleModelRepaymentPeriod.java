@@ -6,9 +6,12 @@
 package org.mifosplatform.portfolio.loanaccount.loanschedule.domain;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.joda.time.LocalDate;
 import org.mifosplatform.organisation.monetary.domain.Money;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanInterestRecalcualtionAdditionalDetails;
 import org.mifosplatform.portfolio.loanaccount.loanschedule.data.LoanSchedulePeriodData;
 
 /**
@@ -27,6 +30,7 @@ public final class LoanScheduleModelRepaymentPeriod implements LoanScheduleModel
     private Money penaltyChargesDue;
     private Money totalDue;
     private final boolean recalculatedInterestComponent;
+    private final List<LoanInterestRecalcualtionAdditionalDetails> loanCompoundingDetails = new ArrayList<>();
 
     public static LoanScheduleModelRepaymentPeriod repayment(final int periodNumber, final LocalDate startDate,
             final LocalDate scheduledDueDate, final Money principalDue, final Money outstandingLoanBalance, final Money interestDue,
@@ -140,5 +144,10 @@ public final class LoanScheduleModelRepaymentPeriod implements LoanScheduleModel
     public void addInterestAmount(Money interestDue) {
         this.interestDue = this.interestDue.plus(interestDue);
         this.totalDue = this.totalDue.plus(principalDue);
+    }
+
+    @Override
+    public List<LoanInterestRecalcualtionAdditionalDetails> getLoanCompoundingDetails() {
+        return this.loanCompoundingDetails;
     }
 }
