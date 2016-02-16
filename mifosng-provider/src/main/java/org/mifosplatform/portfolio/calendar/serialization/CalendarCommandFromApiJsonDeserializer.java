@@ -25,6 +25,7 @@ import org.mifosplatform.portfolio.calendar.domain.CalendarEntityType;
 import org.mifosplatform.portfolio.calendar.domain.CalendarFrequencyType;
 import org.mifosplatform.portfolio.calendar.domain.CalendarRemindBy;
 import org.mifosplatform.portfolio.calendar.domain.CalendarWeekDaysType;
+import org.mifosplatform.portfolio.calendar.service.CalendarUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -159,6 +160,13 @@ public class CalendarCommandFromApiJsonDeserializer extends AbstractFromApiJsonD
                             CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue(), element);
                     baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue()).value(repeatsOnDay)
                             .notBlank().inMinMaxRange(CalendarWeekDaysType.getMinValue(), CalendarWeekDaysType.getMaxValue());
+                } else if (CalendarFrequencyType.fromInt(frequency).isMonthly()) {
+                	final Integer repeatsOnNthDayOfMonth = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(
+                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_NTH_DAY_OF_MONTH.getValue(), element);                    
+                	final Integer repeatsOnDay = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(
+                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_LAST_WEEKDAY_OF_MONTH.getValue(), element);
+                	
+                	CalendarUtils.validateMonthFrequency(baseDataValidator, repeatsOnNthDayOfMonth, repeatsOnDay);
                 }
             }
         }

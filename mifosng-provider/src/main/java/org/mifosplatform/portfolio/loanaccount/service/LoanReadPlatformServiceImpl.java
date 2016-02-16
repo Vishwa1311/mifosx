@@ -583,9 +583,15 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " l.interest_recalculation_enabled as isInterestRecalculationEnabled, "
                     + " lir.id as lirId, lir.loan_id as loanId, lir.compound_type_enum as compoundType, lir.reschedule_strategy_enum as rescheduleStrategy, "
                     + " lir.rest_frequency_type_enum as restFrequencyEnum, lir.rest_frequency_interval as restFrequencyInterval, "
-                    + " lir.rest_freqency_date as restFrequencyDate, "
+                    /*+ " lir.rest_freqency_date as restFrequencyDate, "*/
+                    + " lir.rest_frequency_nth_day_enum as restFrequencyNthDayEnum, "
+                    + " lir.rest_frequency_weekday_enum as restFrequencyWeekDayEnum, "
+                    + " lir.rest_frequency_on_day as restFrequencyOnDay, "
                     + " lir.compounding_frequency_type_enum as compoundingFrequencyEnum, lir.compounding_frequency_interval as compoundingInterval, "
-                    + " lir.compounding_freqency_date as compoundingFrequencyDate, "
+                    /*+ " lir.compounding_freqency_date as compoundingFrequencyDate, "*/
+                    + " lir.compounding_frequency_nth_day_enum as compoundingFrequencyNthDayEnum, "
+                    + " lir.compounding_frequency_weekday_enum as compoundingFrequencyWeekDayEnum, "
+                    + " lir.compounding_frequency_on_day as compoundingFrequencyOnDay, "
                     + " l.is_floating_interest_rate as isFloatingInterestRate, "
                     + " l.interest_rate_differential as interestRateDifferential, "
                     + " l.create_standing_instruction_at_disbursement as createStandingInstructionAtDisbursement, "
@@ -859,7 +865,18 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 final int restFrequencyEnumValue = JdbcSupport.getInteger(rs, "restFrequencyEnum");
                 final EnumOptionData restFrequencyType = LoanEnumerations.interestRecalculationFrequencyType(restFrequencyEnumValue);
                 final int restFrequencyInterval = JdbcSupport.getInteger(rs, "restFrequencyInterval");
-                final LocalDate restFrequencyDate = JdbcSupport.getLocalDate(rs, "restFrequencyDate");
+                /*final LocalDate restFrequencyDate = JdbcSupport.getLocalDate(rs, "restFrequencyDate");*/
+                final Integer restFrequencyNthDayEnumValue = JdbcSupport.getInteger(rs, "restFrequencyNthDayEnum");
+                EnumOptionData restFrequencyNthDayEnum = null;
+                if(restFrequencyNthDayEnumValue != null) {
+                	restFrequencyNthDayEnum = LoanEnumerations.interestRecalculationCompoundingNthDayType(restFrequencyNthDayEnumValue);
+                }
+                final Integer restFrequencyWeekDayEnumValue = JdbcSupport.getInteger(rs, "restFrequencyWeekDayEnum");
+                EnumOptionData restFrequencyWeekDayEnum = null;
+                if(restFrequencyWeekDayEnumValue != null) {
+                	restFrequencyWeekDayEnum = LoanEnumerations.interestRecalculationCompoundingDayOfWeekType(restFrequencyWeekDayEnumValue);
+                }
+                final Integer restFrequencyOnDay = JdbcSupport.getInteger(rs, "restFrequencyOnDay");
                 final CalendarData compoundingCalendarData = null;
                 final Integer compoundingFrequencyEnumValue = JdbcSupport.getInteger(rs, "compoundingFrequencyEnum");
                 EnumOptionData compoundingFrequencyType = null;
@@ -867,11 +884,24 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     compoundingFrequencyType = LoanEnumerations.interestRecalculationFrequencyType(compoundingFrequencyEnumValue);
                 }
                 final Integer compoundingInterval = JdbcSupport.getInteger(rs, "compoundingInterval");
-                final LocalDate compoundingFrequencyDate = JdbcSupport.getLocalDate(rs, "compoundingFrequencyDate");
+                /*final LocalDate compoundingFrequencyDate = JdbcSupport.getLocalDate(rs, "compoundingFrequencyDate");*/
+                final Integer compoundingFrequencyNthDayEnumValue = JdbcSupport.getInteger(rs, "compoundingFrequencyNthDayEnum");
+                EnumOptionData compoundingFrequencyNthDayEnum = null;
+                if(compoundingFrequencyNthDayEnumValue != null) {
+                	compoundingFrequencyNthDayEnum = LoanEnumerations.interestRecalculationCompoundingNthDayType(compoundingFrequencyNthDayEnumValue);
+                }
+                final Integer compoundingFrequencyWeekDayEnumValue = JdbcSupport.getInteger(rs, "compoundingFrequencyWeekDayEnum");
+                EnumOptionData compoundingFrequencyWeekDayEnum = null;
+                if(compoundingFrequencyWeekDayEnumValue != null) {
+                	compoundingFrequencyWeekDayEnum = LoanEnumerations.interestRecalculationCompoundingDayOfWeekType(compoundingFrequencyWeekDayEnumValue);
+                }
+                final Integer compoundingFrequencyOnDay = JdbcSupport.getInteger(rs, "compoundingFrequencyOnDay");
 
                 interestRecalculationData = new LoanInterestRecalculationData(lprId, productId, interestRecalculationCompoundingType,
-                        rescheduleStrategyType, calendarData, restFrequencyType, restFrequencyInterval, restFrequencyDate,
-                        compoundingCalendarData, compoundingFrequencyType, compoundingInterval, compoundingFrequencyDate);
+                        rescheduleStrategyType, calendarData, restFrequencyType, restFrequencyInterval, restFrequencyNthDayEnum,
+                        restFrequencyWeekDayEnum, restFrequencyOnDay,
+                        compoundingCalendarData, compoundingFrequencyType, compoundingInterval, compoundingFrequencyNthDayEnum,
+                        compoundingFrequencyWeekDayEnum, compoundingFrequencyOnDay);
             }
 
             return LoanAccountData.basicLoanDetails(id, accountNo, status, externalId, clientId, clientAccountNo, clientName,

@@ -175,11 +175,11 @@ public class Loan extends AbstractPersistable<Long> {
     @Embedded
     private LoanProductRelatedDetail loanRepaymentScheduleDetail;
 
-    @Column(name = "repayment_frequency_nth_day_enum", nullable = true)
+    /*@Column(name = "repayment_frequency_nth_day_enum", nullable = true)
     private Integer repaymentFrequencyNthDayType;
 
     @Column(name = "repayment_frequency_day_of_week_enum", nullable = true)
-    private Integer repaymentFrequencyDayOfWeekType;
+    private Integer repaymentFrequencyDayOfWeekType;*/
 
     @Column(name = "term_frequency", nullable = false)
     private Integer termFrequency;
@@ -1247,12 +1247,26 @@ public class Loan extends AbstractPersistable<Long> {
 
         final String dateFormatAsInput = command.dateFormat();
         final String localeAsInput = command.locale();
-        final LocalDate recalculationRestFrequencyDate = command
+        /*final LocalDate recalculationRestFrequencyDate = command
                 .localDateValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyDateParamName);
         final LocalDate recalculationCompoundingFrequencyDate = command
                 .localDateValueOfParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyDateParamName);
-        updateLoanInterestRecalculationSettings(recalculationRestFrequencyDate, recalculationCompoundingFrequencyDate, command,
-                actualChanges);
+        final Integer recalculationRestFrequencyNthDay = command.
+        		integerValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyNthDayParamName);
+        final Integer recalculationRestFrequencyWeekday = command.
+        		integerValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyWeekdayParamName);
+        final Integer recalculationRestFrequencyOnDay = command.
+        		integerValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyOnDayParamName);
+        
+        final Integer recalculationCompoundingFrequencyNthDay = command.integerValueOfParameterNamed(
+                LoanProductConstants.recalculationCompoundingFrequencyNthDayParamName);
+        final Integer recalculationCompoundingFrequencyWeekday = command.integerValueOfParameterNamed(
+                LoanProductConstants.recalculationCompoundingFrequencyWeekdayParamName);
+        final Integer recalculationCompoundingFrequencyOnDay = command.integerValueOfParameterNamed(
+                LoanProductConstants.recalculationCompoundingFrequencyOnDayParamName);
+        updateLoanInterestRecalculationSettings(recalculationRestFrequencyNthDay, recalculationRestFrequencyWeekday, 
+        		recalculationRestFrequencyOnDay, recalculationCompoundingFrequencyNthDay, recalculationCompoundingFrequencyWeekday,
+        		recalculationCompoundingFrequencyOnDay, command, actualChanges);*/
 
         final String accountNoParamName = "accountNo";
         if (command.isChangeInStringParameterNamed(accountNoParamName, this.accountNumber)) {
@@ -1538,8 +1552,10 @@ public class Loan extends AbstractPersistable<Long> {
     /**
      * Update interest recalculation settings if product configuration changes
      */
-    public void updateLoanInterestRecalculationSettings(final LocalDate recalculationRestFrequencyDate,
-            final LocalDate recalculationCompoundingFrequencyDate, final JsonCommand command, final Map<String, Object> actualChanges) {
+    /*public void updateLoanInterestRecalculationSettings(final Integer recalculationRestFrequencyNthDay,
+    		final Integer recalculationRestFrequencyWeekday, final Integer recalculationRestFrequencyOnDay,
+    		final Integer recalculationCompoundingFrequencyNthDay, final Integer recalculationCompoundingFrequencyWeekday, 
+    		final Integer recalculationCompoundingFrequencyOnDay, final JsonCommand command, final Map<String, Object> actualChanges) {
 
         if (isInterestRecalculationEnabledForProduct()) {
             Date restFrequencyDate = null;
@@ -1557,9 +1573,11 @@ public class Loan extends AbstractPersistable<Long> {
                         .getProductInterestRecalculationDetails().getInterestRecalculationCompoundingMethod(), this.loanProduct
                         .getProductInterestRecalculationDetails().getRescheduleStrategyMethod(), this.loanProduct
                         .getProductInterestRecalculationDetails().getRestFrequencyType().getValue(), this.loanProduct
-                        .getProductInterestRecalculationDetails().getRestInterval(), restFrequencyDate, this.loanProduct
+                        .getProductInterestRecalculationDetails().getRestInterval(), recalculationRestFrequencyNthDay, 
+                        recalculationRestFrequencyWeekday, recalculationRestFrequencyOnDay, this.loanProduct
                         .getProductInterestRecalculationDetails().getCompoundingFrequencyType().getValue(), this.loanProduct
-                        .getProductInterestRecalculationDetails().getCompoundingInterval(), compoundingFrequencyDate);
+                        .getProductInterestRecalculationDetails().getCompoundingInterval(), recalculationCompoundingFrequencyNthDay,
+                        recalculationCompoundingFrequencyWeekday, recalculationCompoundingFrequencyOnDay);
                 this.loanInterestRecalculationDetails.updateLoan(this);
             } else {
 
@@ -1568,7 +1586,7 @@ public class Loan extends AbstractPersistable<Long> {
         } else {
             this.loanInterestRecalculationDetails = null;
         }
-    }
+    }*/
 
     private void updateOverdueScheduleInstallment(final LoanCharge loanCharge) {
         if (loanCharge.isOverdueInstallmentCharge() && loanCharge.isActive()) {
@@ -1894,8 +1912,10 @@ public class Loan extends AbstractPersistable<Long> {
     public void loanApplicationSubmittal(final AppUser currentUser, final LoanScheduleModel loanSchedule,
             final LoanApplicationTerms loanApplicationTerms, final LoanLifecycleStateMachine lifecycleStateMachine,
             final LocalDate submittedOn, final String externalId, final boolean allowTransactionsOnHoliday, final List<Holiday> holidays,
-            final WorkingDays workingDays, final boolean allowTransactionsOnNonWorkingDay, final LocalDate recalculationRestFrequencyDate,
-            final LocalDate recalculationCompoundingFrequencyDate) {
+            final WorkingDays workingDays, final boolean allowTransactionsOnNonWorkingDay, 
+            final Integer recalculationRestFrequencyNthDay, final Integer recalculationRestFrequencyWeekday, final Integer recalculationRestFrequencyOnDay, 
+            final Integer recalculationCompoundingFrequencyNthDay, final Integer recalculationCompoundingFrequencyWeekday, 
+            final Integer recalculationCompoundingFrequencyOnDay) {
 
         updateLoanSchedule(loanSchedule, currentUser);
 
@@ -1916,13 +1936,13 @@ public class Loan extends AbstractPersistable<Long> {
         this.expectedFirstRepaymentOnDate = loanApplicationTerms.getRepaymentStartFromDate();
         this.interestChargedFromDate = loanApplicationTerms.getInterestChargedFromDate();
 
-        if (loanApplicationTerms.getRepaymentPeriodFrequencyType() == PeriodFrequencyType.MONTHS) {
+        /*if (loanApplicationTerms.getRepaymentPeriodFrequencyType() == PeriodFrequencyType.MONTHS) {
             this.repaymentFrequencyNthDayType = loanApplicationTerms.getNthDay();
             this.repaymentFrequencyDayOfWeekType = loanApplicationTerms.getWeekDayType().getValue();
         } else {
             this.repaymentFrequencyNthDayType = NthDayType.INVALID.getValue();
             this.repaymentFrequencyDayOfWeekType = DayOfWeekType.INVALID.getValue();
-        }
+        }*/
 
         updateLoanScheduleDependentDerivedFields();
 
@@ -1967,7 +1987,7 @@ public class Loan extends AbstractPersistable<Long> {
          * enabled
          */
         if (this.loanRepaymentScheduleDetail.isInterestRecalculationEnabled()) {
-            Date restFrequencyDate = null;
+            /*Date restFrequencyDate = null;
             if (recalculationRestFrequencyDate != null) {
                 restFrequencyDate = recalculationRestFrequencyDate.toDate();
             }
@@ -1975,14 +1995,16 @@ public class Loan extends AbstractPersistable<Long> {
             Date compoundingFrequencyDate = null;
             if (recalculationCompoundingFrequencyDate != null) {
                 compoundingFrequencyDate = recalculationCompoundingFrequencyDate.toDate();
-            }
+            }*/
             this.loanInterestRecalculationDetails = LoanInterestRecalculationDetails.createFrom(this.loanProduct
                     .getProductInterestRecalculationDetails().getInterestRecalculationCompoundingMethod(), this.loanProduct
                     .getProductInterestRecalculationDetails().getRescheduleStrategyMethod(), this.loanProduct
                     .getProductInterestRecalculationDetails().getRestFrequencyType().getValue(), this.loanProduct
-                    .getProductInterestRecalculationDetails().getRestInterval(), restFrequencyDate, this.loanProduct
+                    .getProductInterestRecalculationDetails().getRestInterval(), recalculationRestFrequencyNthDay, 
+                    recalculationRestFrequencyWeekday, recalculationRestFrequencyOnDay, this.loanProduct
                     .getProductInterestRecalculationDetails().getCompoundingFrequencyType().getValue(), this.loanProduct
-                    .getProductInterestRecalculationDetails().getCompoundingInterval(), compoundingFrequencyDate);
+                    .getProductInterestRecalculationDetails().getCompoundingInterval(), recalculationCompoundingFrequencyNthDay,
+                    recalculationCompoundingFrequencyWeekday, recalculationCompoundingFrequencyOnDay);
             this.loanInterestRecalculationDetails.updateLoan(this);
         }
 
@@ -5004,13 +5026,19 @@ public class Loan extends AbstractPersistable<Long> {
     public LoanApplicationTerms constructLoanApplicationTerms(final ScheduleGeneratorDTO scheduleGeneratorDTO) {
         final Integer loanTermFrequency = this.termFrequency;
         final PeriodFrequencyType loanTermPeriodFrequencyType = PeriodFrequencyType.fromInt(this.termPeriodFrequencyType);
-        final NthDayType nthDayType = NthDayType.fromInt(this.repaymentFrequencyNthDayType);
-        final DayOfWeekType dayOfWeekType = DayOfWeekType.fromInt(this.repaymentFrequencyDayOfWeekType);
+        NthDayType nthDayType = null;
+        DayOfWeekType dayOfWeekType = null;
         final List<DisbursementData> disbursementData = new ArrayList<>();
         for (LoanDisbursementDetails disbursementDetails : this.disbursementDetails) {
             disbursementData.add(disbursementDetails.toData());
         }
 
+        Calendar loanCalendar = scheduleGeneratorDTO.getLoanCalendar();
+        if(loanCalendar != null) {
+        	nthDayType = CalendarUtils.getRepeatsOnNthDayOfMonth(loanCalendar.getRecurrence());
+        	dayOfWeekType = DayOfWeekType.fromInt(CalendarUtils.getRepeatsOnDay(loanCalendar.getRecurrence()).getValue());
+        }
+        HolidayDetailDTO holidayDetailDTO = scheduleGeneratorDTO.getHolidayDetailDTO();
         CalendarInstance restCalendarInstance = null;
         CalendarInstance compoundingCalendarInstance = null;
         RecalculationFrequencyType recalculationFrequencyType = null;
@@ -5038,7 +5066,7 @@ public class Loan extends AbstractPersistable<Long> {
                 this.maxOutstandingLoanBalance, getInterestChargedFromDate(), this.loanProduct.getPrincipalThresholdForLastInstallment(),
                 this.loanProduct.getInstallmentAmountInMultiplesOf(), recalculationFrequencyType, restCalendarInstance, compoundingMethod,
                 compoundingCalendarInstance, compoundingFrequencyType, this.loanProduct.preCloseInterestCalculationStrategy(),
-                rescheduleStrategyMethod, getApprovedPrincipal(), annualNominalInterestRate, loanTermVariations);
+                rescheduleStrategyMethod, getApprovedPrincipal(), annualNominalInterestRate, loanTermVariations, loanCalendar, holidayDetailDTO);
         return loanApplicationTerms;
     }
 
@@ -5202,7 +5230,7 @@ public class Loan extends AbstractPersistable<Long> {
     @SuppressWarnings({ "unused" })
     public LoanApplicationTerms getLoanApplicationTerms(final ApplicationCurrency applicationCurrency,
             final CalendarInstance restCalendarInstance, CalendarInstance compoundingCalendarInstance, final Calendar loanCalendar,
-            final FloatingRateDTO floatingRateDTO) {
+            final FloatingRateDTO floatingRateDTO, final HolidayDetailDTO holidayDetailDTO) {
         LoanProduct loanProduct = loanProduct();
         // LoanProductRelatedDetail loanProductRelatedDetail =
         // getLoanRepaymentScheduleDetail();
@@ -5210,8 +5238,12 @@ public class Loan extends AbstractPersistable<Long> {
 
         final Integer loanTermFrequency = getTermFrequency();
         final PeriodFrequencyType loanTermPeriodFrequencyType = this.loanRepaymentScheduleDetail.getInterestPeriodFrequencyType();
-        final NthDayType nthDayType = NthDayType.fromInt(this.repaymentFrequencyNthDayType);
-        final DayOfWeekType dayOfWeekType = DayOfWeekType.fromInt(this.repaymentFrequencyDayOfWeekType);
+        NthDayType nthDayType = null;
+        DayOfWeekType dayOfWeekType = null;
+        if(loanCalendar != null) {
+        	nthDayType = CalendarUtils.getRepeatsOnNthDayOfMonth(loanCalendar.getRecurrence());
+        	dayOfWeekType = DayOfWeekType.fromInt(CalendarUtils.getRepeatsOnDay(loanCalendar.getRecurrence()).getValue());
+        }
 
         final Integer numberOfRepayments = this.loanRepaymentScheduleDetail.getNumberOfRepayments();
         final Integer repaymentEvery = this.loanRepaymentScheduleDetail.getRepayEvery();
@@ -5275,7 +5307,8 @@ public class Loan extends AbstractPersistable<Long> {
                 maxOutstandingBalance, interestChargedFromDate, this.loanProduct.getPrincipalThresholdForLastInstallment(),
                 this.loanProduct.getInstallmentAmountInMultiplesOf(), recalculationFrequencyType, restCalendarInstance, compoundingMethod,
                 compoundingCalendarInstance, compoundingFrequencyType, this.loanProduct.preCloseInterestCalculationStrategy(),
-                rescheduleStrategyMethod, loanCalendar, getApprovedPrincipal(), annualNominalInterestRate, loanTermVariations);
+                rescheduleStrategyMethod, loanCalendar, getApprovedPrincipal(), annualNominalInterestRate, loanTermVariations,
+                holidayDetailDTO);
     }
 
     /**
@@ -5319,7 +5352,7 @@ public class Loan extends AbstractPersistable<Long> {
         return isEnabled;
     }
 
-    public Integer getRepaymentFrequencyNthDayType() {
+   /* public Integer getRepaymentFrequencyNthDayType() {
         return this.repaymentFrequencyNthDayType;
     }
 
@@ -5333,7 +5366,7 @@ public class Loan extends AbstractPersistable<Long> {
 
     public void setRepaymentFrequencyDayOfWeekType(Integer repaymentFrequencyDayOfWeekType) {
         this.repaymentFrequencyDayOfWeekType = repaymentFrequencyDayOfWeekType;
-    }
+    }*/
 
     public String getAccountNumber() {
         return this.accountNumber;

@@ -9,6 +9,8 @@ import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.a
 import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.interestCalculationPeriodType;
 import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.interestRateFrequencyType;
 import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.interestRecalculationCompoundingType;
+import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.interestRecalculationCompoundingNthDayType;
+import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.interestRecalculationCompoundingDayOfWeekType;
 import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.interestRecalculationFrequencyType;
 import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.interestType;
 import static org.mifosplatform.portfolio.loanproduct.service.LoanEnumerations.loanCycleValueConditionType;
@@ -99,7 +101,7 @@ public class LoanDropdownReadPlatformServiceImpl implements LoanDropdownReadPlat
     public List<EnumOptionData> retrieveRepaymentFrequencyOptionsForNthDayOfMonth() {
         final List<EnumOptionData> repaymentFrequencyOptions = Arrays.asList(repaymentFrequencyNthDayType(NthDayType.ONE),
                 repaymentFrequencyNthDayType(NthDayType.TWO), repaymentFrequencyNthDayType(NthDayType.THREE),
-                repaymentFrequencyNthDayType(NthDayType.FOUR));
+                repaymentFrequencyNthDayType(NthDayType.FOUR), repaymentFrequencyNthDayType(NthDayType.LAST));
         return repaymentFrequencyOptions;
     }
 
@@ -152,6 +154,28 @@ public class LoanDropdownReadPlatformServiceImpl implements LoanDropdownReadPlat
                 interestRecalculationCompoundingType(InterestRecalculationCompoundingMethod.INTEREST),
                 interestRecalculationCompoundingType(InterestRecalculationCompoundingMethod.INTEREST_AND_FEE));
         return interestRecalculationCompoundingTypeOptions;
+    }
+    
+    @Override
+    public List<EnumOptionData> retrieveInterestRecalculationNthDayTypeOptions() {
+
+        final List<EnumOptionData> interestRecalculationCompoundingNthDayTypeOptions = Arrays.asList(
+        		interestRecalculationCompoundingNthDayType(NthDayType.ONE),
+        		interestRecalculationCompoundingNthDayType(NthDayType.TWO),
+        		interestRecalculationCompoundingNthDayType(NthDayType.THREE),
+        		interestRecalculationCompoundingNthDayType(NthDayType.FOUR),
+        		interestRecalculationCompoundingNthDayType(NthDayType.LAST));
+        return interestRecalculationCompoundingNthDayTypeOptions;
+    }
+    
+    @Override
+    public List<EnumOptionData> retrieveInterestRecalculationDayOfWeekTypeOptions() {
+
+        final List<EnumOptionData> interestRecalculationCompoundingNthDayTypeOptions = Arrays.asList(interestRecalculationCompoundingDayOfWeekType(DayOfWeekType.SUNDAY),
+        		interestRecalculationCompoundingDayOfWeekType(DayOfWeekType.MONDAY), interestRecalculationCompoundingDayOfWeekType(DayOfWeekType.TUESDAY),
+        		interestRecalculationCompoundingDayOfWeekType(DayOfWeekType.WEDNESDAY), interestRecalculationCompoundingDayOfWeekType(DayOfWeekType.THURSDAY),
+                interestRecalculationCompoundingDayOfWeekType(DayOfWeekType.FRIDAY), interestRecalculationCompoundingDayOfWeekType(DayOfWeekType.SATURDAY));
+        return interestRecalculationCompoundingNthDayTypeOptions;
     }
 
     @Override

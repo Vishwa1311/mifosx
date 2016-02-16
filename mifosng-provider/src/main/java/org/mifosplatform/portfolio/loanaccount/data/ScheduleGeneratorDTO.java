@@ -8,6 +8,7 @@ package org.mifosplatform.portfolio.loanaccount.data;
 import org.joda.time.LocalDate;
 import org.mifosplatform.organisation.monetary.domain.ApplicationCurrency;
 import org.mifosplatform.portfolio.calendar.domain.CalendarInstance;
+import org.mifosplatform.portfolio.calendar.domain.Calendar;
 import org.mifosplatform.portfolio.floatingrates.data.FloatingRateDTO;
 import org.mifosplatform.portfolio.loanaccount.loanschedule.domain.LoanScheduleGeneratorFactory;
 
@@ -22,11 +23,13 @@ public class ScheduleGeneratorDTO {
     LocalDate recalculateFrom;
     final Long overdurPenaltyWaitPeriod;
     final FloatingRateDTO floatingRateDTO;
+    final Calendar loanCalendar;
 
     public ScheduleGeneratorDTO(final LoanScheduleGeneratorFactory loanScheduleFactory, final ApplicationCurrency applicationCurrency,
             final LocalDate calculatedRepaymentsStartingFromDate, final HolidayDetailDTO holidayDetailDTO,
             final CalendarInstance calendarInstanceForInterestRecalculation, final CalendarInstance compoundingCalendarInstance,
-            final LocalDate recalculateFrom, final Long overdurPenaltyWaitPeriod, final FloatingRateDTO floatingRateDTO) {
+            final LocalDate recalculateFrom, final Long overdurPenaltyWaitPeriod, final FloatingRateDTO floatingRateDTO,
+            final Calendar loanCalendar) {
 
         this.loanScheduleFactory = loanScheduleFactory;
         this.applicationCurrency = applicationCurrency;
@@ -37,6 +40,7 @@ public class ScheduleGeneratorDTO {
         this.overdurPenaltyWaitPeriod = overdurPenaltyWaitPeriod;
         this.holidayDetailDTO = holidayDetailDTO;
         this.floatingRateDTO = floatingRateDTO;
+        this.loanCalendar = loanCalendar;
     }
 
     public LoanScheduleGeneratorFactory getLoanScheduleFactory() {
@@ -85,6 +89,10 @@ public class ScheduleGeneratorDTO {
 
     public FloatingRateDTO getFloatingRateDTO() {
         return this.floatingRateDTO;
+    }
+    
+    public Calendar getLoanCalendar() {
+        return this.loanCalendar;
     }
 
 }

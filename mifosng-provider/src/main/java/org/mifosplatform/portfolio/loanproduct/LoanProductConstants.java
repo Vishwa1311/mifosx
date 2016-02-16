@@ -74,11 +74,17 @@ public interface LoanProductConstants {
     public static final String recalculationRestFrequencyTypeParameterName = "recalculationRestFrequencyType";
     public static final String recalculationRestFrequencyIntervalParameterName = "recalculationRestFrequencyInterval";
     public static final String recalculationRestFrequencyDateParamName = "recalculationRestFrequencyDate";
+    public static final String recalculationRestFrequencyWeekdayParamName = "recalculationRestFrequencyDayOfWeekType";
+    public static final String recalculationRestFrequencyNthDayParamName = "recalculationRestFrequencyNthDayType";
+    public static final String recalculationRestFrequencyOnDayParamName = "recalculationRestFrequencyOnDayType";
     public static final String isArrearsBasedOnOriginalScheduleParamName = "isArrearsBasedOnOriginalSchedule";
     public static final String preClosureInterestCalculationStrategyParamName = "preClosureInterestCalculationStrategy";
     public static final String recalculationCompoundingFrequencyTypeParameterName = "recalculationCompoundingFrequencyType";
     public static final String recalculationCompoundingFrequencyIntervalParameterName = "recalculationCompoundingFrequencyInterval";
     public static final String recalculationCompoundingFrequencyDateParamName = "recalculationCompoundingFrequencyDate";
+    public static final String recalculationCompoundingFrequencyWeekdayParamName = "recalculationCompoundingFrequencyDayOfWeekType";
+    public static final String recalculationCompoundingFrequencyNthDayParamName = "recalculationCompoundingFrequencyNthDayType";
+    public static final String recalculationCompoundingFrequencyOnDayParamName = "recalculationCompoundingFrequencyOnDayType";
 
     // Guarantee related
     public static final String holdGuaranteeFundsParamName = "holdGuaranteeFunds";

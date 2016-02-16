@@ -37,6 +37,7 @@ import org.mifosplatform.portfolio.calendar.CalendarConstants.CALENDAR_SUPPORTED
 import org.mifosplatform.portfolio.calendar.exception.CalendarDateException;
 import org.mifosplatform.portfolio.calendar.exception.CalendarParameterUpdateNotSupportedException;
 import org.mifosplatform.portfolio.calendar.service.CalendarUtils;
+import org.mifosplatform.portfolio.common.domain.NthDayType;
 import org.mifosplatform.useradministration.domain.AppUser;
 
 @Entity
@@ -129,7 +130,8 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
     }
 
     public static Calendar createRepeatingCalendar(final String title, final LocalDate startDate, final Integer typeId,
-            final CalendarFrequencyType frequencyType, final Integer interval, final Integer repeatsOnDay) {
+            final CalendarFrequencyType frequencyType, final Integer interval, final Integer repeatsOnDay,
+            final Integer repeatsOnNthDayOfMonth) {
 
         final String description = null;
         final String location = null;
@@ -139,7 +141,7 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
         final Integer remindById = null;
         final Integer firstReminder = null;
         final Integer secondReminder = null;
-        final String recurrence = constructRecurrence(frequencyType, interval, repeatsOnDay);
+        final String recurrence = constructRecurrence(frequencyType, interval, repeatsOnDay, repeatsOnNthDayOfMonth);
 
         return new Calendar(title, description, location, startDate, endDate, duration, typeId, repeating, recurrence, remindById,
                 firstReminder, secondReminder);
@@ -213,7 +215,7 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
 
             // TODO cover other recurrence also
 
-            this.recurrence = constructRecurrence(calendarFrequencyType, interval, repeatsOnDay);
+            this.recurrence = constructRecurrence(calendarFrequencyType, interval, repeatsOnDay, null);
 
         }
 
@@ -378,7 +380,7 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
 
     @SuppressWarnings("null")
     public Map<String, Object> updateRepeatingCalendar(final LocalDate calendarStartDate, final CalendarFrequencyType frequencyType,
-            final Integer interval, final Integer repeatsOnDay) {
+            final Integer interval, final Integer repeatsOnDay, final Integer repeatsOnNthDay) {
         final Map<String, Object> actualChanges = new LinkedHashMap<>(9);
 
         if (calendarStartDate != null & this.startDate != null) {
@@ -388,7 +390,7 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
             }
         }
 
-        final String newRecurrence = Calendar.constructRecurrence(frequencyType, interval, repeatsOnDay);
+        final String newRecurrence = Calendar.constructRecurrence(frequencyType, interval, repeatsOnDay, repeatsOnNthDay);
         if (!StringUtils.isBlank(this.recurrence) && !newRecurrence.equalsIgnoreCase(this.recurrence)) {
             actualChanges.put("recurrence", newRecurrence);
             this.recurrence = newRecurrence;
@@ -520,13 +522,19 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
             if (frequencyType.isWeekly()) {
                 repeatsOnDay = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue());
             }
+            Integer repeatsOnNthDayOfMonth = null;
+            if(frequencyType.isMonthly()) {
+            	repeatsOnNthDayOfMonth = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_NTH_DAY_OF_MONTH.getValue());
+            	repeatsOnDay = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_LAST_WEEKDAY_OF_MONTH.getValue());
+            }
 
-            return constructRecurrence(frequencyType, interval, repeatsOnDay);
+            return constructRecurrence(frequencyType, interval, repeatsOnDay, repeatsOnNthDayOfMonth);
         }
         return "";
     }
 
-    private static String constructRecurrence(final CalendarFrequencyType frequencyType, final Integer interval, final Integer repeatsOnDay) {
+    private static String constructRecurrence(final CalendarFrequencyType frequencyType, final Integer interval, final Integer repeatsOnDay,
+    		final Integer repeatsOnNthDayOfMonth) {
         final StringBuilder recurrenceBuilder = new StringBuilder(200);
 
         recurrenceBuilder.append("FREQ=");
@@ -541,6 +549,25 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
                 recurrenceBuilder.append(";BYDAY=");
                 recurrenceBuilder.append(weekDays.toString().toUpperCase());
             }
+        }
+        if (frequencyType.isMonthly()) {
+        	if(repeatsOnNthDayOfMonth != null && (repeatsOnDay == null || repeatsOnDay == CalendarWeekDaysType.INVALID.getValue())) {
+            	if (repeatsOnNthDayOfMonth >= -1 && repeatsOnNthDayOfMonth <= 31) {
+            		recurrenceBuilder.append(";BYMONTHDAY=");
+            		recurrenceBuilder.append(repeatsOnNthDayOfMonth);
+            	}
+        	} else if (repeatsOnNthDayOfMonth != null && repeatsOnDay != null && repeatsOnDay != CalendarWeekDaysType.INVALID.getValue()) {
+        		final NthDayType nthDay = NthDayType.fromInt(repeatsOnNthDayOfMonth);
+            	if (!nthDay.isInvalid()) {
+            		recurrenceBuilder.append(";BYSETPOS=");
+            		recurrenceBuilder.append(nthDay.getValue());
+            	}
+            	final CalendarWeekDaysType weekday = CalendarWeekDaysType.fromInt(repeatsOnDay);
+            	if(!weekday.isInvalid()) {
+            		recurrenceBuilder.append(";BYDAY=");
+                    recurrenceBuilder.append(weekday.toString().toUpperCase());
+            	}
+        	}
         }
         return recurrenceBuilder.toString();
     }
@@ -563,10 +590,14 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
 
         final CalendarFrequencyType frequencyType = CalendarUtils.getFrequency(this.recurrence);
         final Integer interval = new Integer(CalendarUtils.getInterval(this.recurrence));
-        final String newRecurrence = Calendar.constructRecurrence(frequencyType, interval, startDate.getDayOfWeek());
+        final String newRecurrence = Calendar.constructRecurrence(frequencyType, interval, startDate.getDayOfWeek(), null);
 
         this.recurrence = newRecurrence;
         this.startDate = startDate.toDate();
         this.endDate = endDate.toDate();
     }
+
+	public void setRecurrence(String recurrence) {
+		this.recurrence = recurrence;
+	}
 }

@@ -57,9 +57,18 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
     @Column(name = "rest_frequency_interval", nullable = false)
     private Integer restInterval;
 
-    @Temporal(TemporalType.DATE)
+    /*@Temporal(TemporalType.DATE)
     @Column(name = "rest_freqency_date")
-    private Date restFrequencyDate;
+    private Date restFrequencyDate;*/
+    
+    @Column(name = "rest_frequency_nth_day_enum", nullable = true)
+    private Integer restFrequencyNthDay;
+    
+    @Column(name = "rest_frequency_weekday_enum", nullable = true)
+    private Integer restFrequencyWeekday;
+
+    @Column(name = "rest_frequency_on_day", nullable = true)
+    private Integer restFrequencyOnDay;
 
     @Column(name = "compounding_frequency_type_enum", nullable = true)
     private Integer compoundingFrequencyType;
@@ -67,33 +76,53 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
     @Column(name = "compounding_frequency_interval", nullable = true)
     private Integer compoundingInterval;
 
-    @Temporal(TemporalType.DATE)
+    /*@Temporal(TemporalType.DATE)
     @Column(name = "compounding_freqency_date")
-    private Date compoundingFrequencyDate;
+    private Date compoundingFrequencyDate;*/
+    
+    @Column(name = "compounding_frequency_nth_day_enum", nullable = true)
+    private Integer compoundingFrequencyNthDay;
+    
+    @Column(name = "compounding_frequency_weekday_enum", nullable = true)
+    private Integer compoundingFrequencyWeekday;
+
+    @Column(name = "compounding_frequency_on_day", nullable = true)
+    private Integer compoundingFrequencyOnDay;
 
     protected LoanInterestRecalculationDetails() {
         // Default constructor for jpa repository
     }
 
     private LoanInterestRecalculationDetails(final Integer interestRecalculationCompoundingMethod, final Integer rescheduleStrategyMethod,
-            final Integer restFrequencyType, final Integer restInterval, final Date restFrequencyDate, Integer compoundingFrequencyType,
-            Integer compoundingInterval, Date compoundingFrequencyDate) {
+            final Integer restFrequencyType, final Integer restInterval, final Integer restFrequencyNthDay,
+            Integer restFrequencyWeekday, Integer restFrequencyOnDay, Integer compoundingFrequencyType,
+            Integer compoundingInterval, Integer compoundingFrequencyNthDay, Integer compoundingFrequencyWeekday,
+            Integer compoundingFrequencyOnDay) {
         this.interestRecalculationCompoundingMethod = interestRecalculationCompoundingMethod;
         this.rescheduleStrategyMethod = rescheduleStrategyMethod;
-        this.restFrequencyDate = restFrequencyDate;
+        /*this.restFrequencyDate = restFrequencyDate;*/
+        this.restFrequencyNthDay = restFrequencyNthDay;
+        this.restFrequencyWeekday = restFrequencyWeekday;
+        this.restFrequencyOnDay = restFrequencyOnDay;
         this.restFrequencyType = restFrequencyType;
         this.restInterval = restInterval;
-        this.compoundingFrequencyDate = compoundingFrequencyDate;
+        /*this.compoundingFrequencyDate = compoundingFrequencyDate;*/
+        this.compoundingFrequencyNthDay = compoundingFrequencyNthDay;
+        this.compoundingFrequencyWeekday = compoundingFrequencyWeekday;
+        this.compoundingFrequencyOnDay = compoundingFrequencyOnDay;
         this.compoundingFrequencyType = compoundingFrequencyType;
         this.compoundingInterval = compoundingInterval;
     }
 
     public static LoanInterestRecalculationDetails createFrom(final Integer interestRecalculationCompoundingMethod,
             final Integer rescheduleStrategyMethod, final Integer restFrequencyType, final Integer restInterval,
-            final Date restFrequencyDate, final Integer compoundingFrequencyType, final Integer compoundingInterval,
-            final Date compoundingFrequencyDate) {
+            final Integer restFrequencyNthDay, final Integer restFrequencyWeekday, final Integer restFrequencyOnDay, 
+            final Integer compoundingFrequencyType, final Integer compoundingInterval,
+            final Integer compoundingFrequencyNthDay, final Integer compoundingFrequencyWeekday, 
+            final Integer compoundingFrequencyOnDay) {
         return new LoanInterestRecalculationDetails(interestRecalculationCompoundingMethod, rescheduleStrategyMethod, restFrequencyType,
-                restInterval, restFrequencyDate, compoundingFrequencyType, compoundingInterval, compoundingFrequencyDate);
+                restInterval, restFrequencyNthDay, restFrequencyWeekday, restFrequencyOnDay, compoundingFrequencyType, compoundingInterval, 
+                compoundingFrequencyNthDay, compoundingFrequencyWeekday, compoundingFrequencyOnDay);
     }
 
     public void updateLoan(final Loan loan) {
@@ -101,7 +130,7 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
     }
 
     public void update(final JsonCommand command, final Map<String, Object> actualChanges) {
-        if (command.isChangeInLocalDateParameterNamed(LoanProductConstants.recalculationRestFrequencyDateParamName,
+    	/*if (command.isChangeInLocalDateParameterNamed(LoanProductConstants.recalculationRestFrequencyDateParamName,
                 getRestFrequencyLocalDate())) {
             final String dateFormatAsInput = command.dateFormat();
             final String localeAsInput = command.locale();
@@ -116,9 +145,9 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
             } else {
                 this.restFrequencyDate = newValue.toDate();
             }
-        }
+        }*/
 
-        if (command.isChangeInLocalDateParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyDateParamName,
+        /*if (command.isChangeInLocalDateParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyDateParamName,
                 getCompoundingFrequencyLocalDate())) {
             final String dateFormatAsInput = command.dateFormat();
             final String localeAsInput = command.locale();
@@ -136,7 +165,7 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
             } else {
                 this.compoundingFrequencyDate = newValue.toDate();
             }
-        }
+        }*/
     }
 
     public InterestRecalculationCompoundingMethod getInterestRecalculationCompoundingMethod() {
@@ -147,13 +176,13 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
         return LoanRescheduleStrategyMethod.fromInt(this.rescheduleStrategyMethod);
     }
 
-    public LocalDate getRestFrequencyLocalDate() {
+    /*public LocalDate getRestFrequencyLocalDate() {
         LocalDate recurrenceOnLocalDate = null;
         if (this.restFrequencyDate != null) {
             recurrenceOnLocalDate = new LocalDate(this.restFrequencyDate);
         }
         return recurrenceOnLocalDate;
-    }
+    }*/
 
     public RecalculationFrequencyType getRestFrequencyType() {
         return RecalculationFrequencyType.fromInt(this.restFrequencyType);
@@ -163,13 +192,13 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
         return this.restInterval;
     }
 
-    public LocalDate getCompoundingFrequencyLocalDate() {
+    /*public LocalDate getCompoundingFrequencyLocalDate() {
         LocalDate recurrenceOnLocalDate = null;
         if (this.compoundingFrequencyDate != null) {
             recurrenceOnLocalDate = new LocalDate(this.compoundingFrequencyDate);
         }
         return recurrenceOnLocalDate;
-    }
+    }*/
 
     public RecalculationFrequencyType getCompoundingFrequencyType() {
         return RecalculationFrequencyType.fromInt(this.compoundingFrequencyType);
@@ -178,4 +207,28 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
     public Integer getCompoundingInterval() {
         return this.compoundingInterval;
     }
+
+	public Integer getRestFrequencyNthDay() {
+		return this.restFrequencyNthDay;
+	}
+
+	public Integer getRestFrequencyWeekday() {
+		return this.restFrequencyWeekday;
+	}
+
+	public Integer getRestFrequencyOnDay() {
+		return this.restFrequencyOnDay;
+	}
+
+	public Integer getCompoundingFrequencyNthDay() {
+		return this.compoundingFrequencyNthDay;
+	}
+
+	public Integer getCompoundingFrequencyWeekday() {
+		return this.compoundingFrequencyWeekday;
+	}
+
+	public Integer getCompoundingFrequencyOnDay() {
+		return this.compoundingFrequencyOnDay;
+	}
 }

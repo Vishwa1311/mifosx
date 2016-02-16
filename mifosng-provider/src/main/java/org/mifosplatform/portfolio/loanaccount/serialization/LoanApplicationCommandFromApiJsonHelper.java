@@ -1126,7 +1126,7 @@ public final class LoanApplicationCommandFromApiJsonHelper {
     public void validateLoanForInterestRecalculation(final Loan loan) {
         final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
         LoanInterestRecalculationDetails interestRecalculationDetails = loan.loanInterestRecalculationDetails();
-        if (!interestRecalculationDetails.getRestFrequencyType().isSameAsRepayment()) {
+        /*if (!interestRecalculationDetails.getRestFrequencyType().isSameAsRepayment()) {
             String paramName = LoanProductConstants.recalculationRestFrequencyDateParamName;
             validateRecalcuationFrequency(interestRecalculationDetails.getRestFrequencyLocalDate(), loan.getExpectedDisbursedOnLocalDate(),
                     dataValidationErrors, paramName);
@@ -1137,7 +1137,7 @@ public final class LoanApplicationCommandFromApiJsonHelper {
             String paramName = LoanProductConstants.recalculationCompoundingFrequencyDateParamName;
             validateCompoundingFrequency(interestRecalculationDetails.getCompoundingFrequencyLocalDate(),
                     loan.getExpectedDisbursedOnLocalDate(), dataValidationErrors, paramName);
-        }
+        }*/
 
         validateLoanCharges(loan.charges(), dataValidationErrors);
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException(dataValidationErrors); }

@@ -72,6 +72,7 @@ public class CalendarReadPlatformServiceImpl implements CalendarReadPlatformServ
             final EnumOptionData frequency = CalendarEnumerations.calendarFrequencyType(CalendarUtils.getFrequency(recurrence));
             final Integer interval = new Integer(CalendarUtils.getInterval(recurrence));
             final EnumOptionData repeatsOnDay = CalendarEnumerations.calendarWeekDaysType(CalendarUtils.getRepeatsOnDay(recurrence));
+            final EnumOptionData repeatsOnNthDayOfMonth = CalendarEnumerations.calendarFrequencyNthDayType(CalendarUtils.getRepeatsOnNthDayOfMonth(recurrence));
             final Integer remindById = rs.getInt("remindById");
             EnumOptionData remindBy = null;
             if (remindById != null && remindById != 0) {
@@ -92,8 +93,8 @@ public class CalendarReadPlatformServiceImpl implements CalendarReadPlatformServ
             final String lastUpdatedByUserName = rs.getString("updatingUserName");
 
             return CalendarData.instance(id, calendarInstanceId, entityId, entityType, title, description, location, startDate, endDate,
-                    duration, type, repeating, recurrence, frequency, interval, repeatsOnDay, remindBy, firstReminder, secondReminder,
-                    humanReadable, createdDate, lastUpdatedDate, createdByUserId, createdByUserName, lastUpdatedByUserId,
+                    duration, type, repeating, recurrence, frequency, interval, repeatsOnDay, repeatsOnNthDayOfMonth, remindBy, firstReminder, 
+                    secondReminder, humanReadable, createdDate, lastUpdatedDate, createdByUserId, createdByUserName, lastUpdatedByUserId,
                     lastUpdatedByUserName);
         }
     }
@@ -427,6 +428,7 @@ public class CalendarReadPlatformServiceImpl implements CalendarReadPlatformServ
             final EnumOptionData frequency = CalendarEnumerations.calendarFrequencyType(CalendarUtils.getFrequency(recurrence));
             final Integer interval = new Integer(CalendarUtils.getInterval(recurrence));
             final EnumOptionData repeatsOnDay = CalendarEnumerations.calendarWeekDaysType(CalendarUtils.getRepeatsOnDay(recurrence));
+            final EnumOptionData repeatsOnNthDayOfMonth = CalendarEnumerations.calendarFrequencyNthDayType(CalendarUtils.getRepeatsOnNthDayOfMonth(recurrence));
             final Integer remindById = rs.getInt("remindById");
             EnumOptionData remindBy = null;
             if (remindById != null && remindById != 0) {
@@ -447,8 +449,8 @@ public class CalendarReadPlatformServiceImpl implements CalendarReadPlatformServ
             final String lastUpdatedByUserName = null;
 
             return CalendarData.instance(id, calendarInstanceId, entityId, entityType, title, description, location, startDate, endDate,
-                    duration, type, repeating, recurrence, frequency, interval, repeatsOnDay, remindBy, firstReminder, secondReminder,
-                    humanReadable, createdDate, lastUpdatedDate, createdByUserId, createdByUserName, lastUpdatedByUserId,
+                    duration, type, repeating, recurrence, frequency, interval, repeatsOnDay, repeatsOnNthDayOfMonth, remindBy, firstReminder, 
+                    secondReminder, humanReadable, createdDate, lastUpdatedDate, createdByUserId, createdByUserName, lastUpdatedByUserId,
                     lastUpdatedByUserName);
         }
     }

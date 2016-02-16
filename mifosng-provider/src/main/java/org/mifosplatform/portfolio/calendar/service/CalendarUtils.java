@@ -17,6 +17,7 @@ import java.util.StringTokenizer;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.NumberList;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.WeekDay;
@@ -27,13 +28,16 @@ import net.fortuna.ical4j.model.property.RRule;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.mifosplatform.infrastructure.core.data.DataValidatorBuilder;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.mifosplatform.infrastructure.core.service.DateUtils;
 import org.mifosplatform.organisation.workingdays.domain.WorkingDays;
 import org.mifosplatform.organisation.workingdays.service.WorkingDaysUtil;
+import org.mifosplatform.portfolio.calendar.CalendarConstants.CALENDAR_SUPPORTED_PARAMETERS;
 import org.mifosplatform.portfolio.calendar.domain.Calendar;
 import org.mifosplatform.portfolio.calendar.domain.CalendarFrequencyType;
 import org.mifosplatform.portfolio.calendar.domain.CalendarWeekDaysType;
+import org.mifosplatform.portfolio.common.domain.NthDayType;
 import org.mifosplatform.portfolio.common.domain.PeriodFrequencyType;
 
 public class CalendarUtils {
@@ -344,6 +348,19 @@ public class CalendarUtils {
         WeekDay weekDay = (WeekDay) weekDays.get(0);
         return CalendarWeekDaysType.fromString(weekDay.getDay());
     }
+    
+    public static NthDayType getRepeatsOnNthDayOfMonth(final String recurringRule) {
+        final Recur recur = CalendarUtils.getICalRecur(recurringRule);
+        NumberList monthDays = null;
+        if(recur.getDayList().isEmpty())
+        	monthDays = recur.getMonthDayList();
+        else
+        	monthDays = recur.getSetPosList();
+        if (monthDays.isEmpty()) return NthDayType.INVALID;
+        // supports only one day
+        Integer monthDay = (Integer) monthDays.get(0);
+        return NthDayType.fromInt(monthDay);
+    }
 
     public static LocalDate getFirstRepaymentMeetingDate(final Calendar calendar, final LocalDate disbursementDate,
             final Integer loanRepaymentInterval, final String frequency) {
@@ -520,5 +537,19 @@ public class CalendarUtils {
         final LocalDate scheduleDate = getNextRecurringDate(recur, seedDate, date);
 
         return scheduleDate;
+    }
+    
+    public static DataValidatorBuilder validateMonthFrequency(DataValidatorBuilder baseDataValidator, Integer repeatsOnNthDayOfMonth,
+    		Integer repeatsOnDay) {
+    	
+		baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_NTH_DAY_OF_MONTH.getValue())
+				.value(repeatsOnNthDayOfMonth).isOneOfTheseValues(NthDayType.ONE.getValue(), NthDayType.TWO.getValue(),
+						NthDayType.THREE.getValue(), NthDayType.FOUR.getValue(), NthDayType.LAST.getValue());
+        
+        baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_LAST_WEEKDAY_OF_MONTH.getValue())
+        		.value(repeatsOnDay).inMinMaxRange(CalendarWeekDaysType.INVALID.getValue(), CalendarWeekDaysType.getMaxValue());
+    	
+		return baseDataValidator;
+    	
     }
 }

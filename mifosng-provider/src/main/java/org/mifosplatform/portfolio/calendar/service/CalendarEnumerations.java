@@ -6,6 +6,7 @@
 package org.mifosplatform.portfolio.calendar.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.mifosplatform.infrastructure.core.data.EnumOptionData;
@@ -14,6 +15,7 @@ import org.mifosplatform.portfolio.calendar.domain.CalendarFrequencyType;
 import org.mifosplatform.portfolio.calendar.domain.CalendarRemindBy;
 import org.mifosplatform.portfolio.calendar.domain.CalendarType;
 import org.mifosplatform.portfolio.calendar.domain.CalendarWeekDaysType;
+import org.mifosplatform.portfolio.common.domain.NthDayType;
 
 public class CalendarEnumerations {
 
@@ -105,6 +107,23 @@ public class CalendarEnumerations {
                 optionDatas.add(calendarWeekDaysType(calendarWeekDaysType));
             }
         }
+        return optionDatas;
+    }
+    
+    public static EnumOptionData calendarFrequencyNthDayType(final int id) {
+        return calendarFrequencyNthDayType(NthDayType.fromInt(id));
+    }
+
+    public static EnumOptionData calendarFrequencyNthDayType(final NthDayType calendarFrequencyNthDayType) {
+        final EnumOptionData optionData = new EnumOptionData(calendarFrequencyNthDayType.getValue().longValue(), calendarFrequencyNthDayType.getCode(),
+                calendarFrequencyNthDayType.toString());
+        return optionData;
+    }
+
+    public static List<EnumOptionData> calendarFrequencyNthDayType() {
+        final List<EnumOptionData> optionDatas = Arrays.asList(calendarFrequencyNthDayType(NthDayType.ONE),
+        		calendarFrequencyNthDayType(NthDayType.TWO), calendarFrequencyNthDayType(NthDayType.THREE),
+        		calendarFrequencyNthDayType(NthDayType.FOUR), calendarFrequencyNthDayType(NthDayType.LAST));
         return optionDatas;
     }
 }

@@ -273,10 +273,35 @@ public class LoanAssembler {
             }
         }
 
-        final LocalDate recalculationRestFrequencyDate = this.fromApiJsonHelper.extractLocalDateNamed(
+        /*final LocalDate recalculationRestFrequencyDate = this.fromApiJsonHelper.extractLocalDateNamed(
                 LoanProductConstants.recalculationRestFrequencyDateParamName, element);
         final LocalDate recalculationCompoundingFrequencyDate = this.fromApiJsonHelper.extractLocalDateNamed(
-                LoanProductConstants.recalculationCompoundingFrequencyDateParamName, element);
+                LoanProductConstants.recalculationCompoundingFrequencyDateParamName, element);*/
+        
+        /*final Integer recalculationRestFrequencyNthDay = this.fromApiJsonHelper.
+        		extractIntegerWithLocaleNamed(LoanProductConstants.recalculationRestFrequencyNthDayParamName, element);
+        final Integer recalculationRestFrequencyWeekday = this.fromApiJsonHelper.
+        		extractIntegerWithLocaleNamed(LoanProductConstants.recalculationRestFrequencyWeekdayParamName, element);
+        final Integer recalculationRestFrequencyOnDay = this.fromApiJsonHelper.
+        		extractIntegerWithLocaleNamed(LoanProductConstants.recalculationRestFrequencyOnDayParamName, element);
+        
+        final Integer recalculationCompoundingFrequencyNthDay = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(
+                LoanProductConstants.recalculationCompoundingFrequencyNthDayParamName, element);
+        final Integer recalculationCompoundingFrequencyWeekday = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(
+                LoanProductConstants.recalculationCompoundingFrequencyWeekdayParamName, element);
+        final Integer recalculationCompoundingFrequencyOnDay = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(
+                LoanProductConstants.recalculationCompoundingFrequencyOnDayParamName, element);*/
+        
+        final Integer recalculationRestFrequencyNthDay = loanProduct.getProductInterestRecalculationDetails().getRestFrequencyNthDay();
+        final Integer recalculationRestFrequencyWeekday = loanProduct.getProductInterestRecalculationDetails().getRestFrequencyWeekday();
+        final Integer recalculationRestFrequencyOnDay = loanProduct.getProductInterestRecalculationDetails().getRestFrequencyOnDay();
+        
+        final Integer recalculationCompoundingFrequencyNthDay = loanProduct.getProductInterestRecalculationDetails().
+        		getCompoundingFrequencyNthDay();
+        final Integer recalculationCompoundingFrequencyWeekday = loanProduct.getProductInterestRecalculationDetails().
+        		getCompoundingFrequencyWeekday();
+        final Integer recalculationCompoundingFrequencyOnDay = loanProduct.getProductInterestRecalculationDetails().
+        		getCompoundingFrequencyOnDay();
 
         final LoanApplicationTerms loanApplicationTerms = this.loanScheduleAssembler.assembleLoanTerms(element);
         final boolean isHolidayEnabled = this.configurationDomainService.isRescheduleRepaymentsOnHolidaysEnabled();
@@ -289,7 +314,8 @@ public class LoanAssembler {
                 isHolidayEnabled, holidays, workingDays, element,disbursementDetails);
         loanApplication.loanApplicationSubmittal(currentUser, loanScheduleModel, loanApplicationTerms, defaultLoanLifecycleStateMachine(),
                 submittedOnDate, externalId, allowTransactionsOnHoliday, holidays, workingDays, allowTransactionsOnNonWorkingDay,
-                recalculationRestFrequencyDate, recalculationCompoundingFrequencyDate);
+                recalculationRestFrequencyNthDay, recalculationRestFrequencyWeekday, recalculationRestFrequencyOnDay, 
+                recalculationCompoundingFrequencyNthDay, recalculationCompoundingFrequencyWeekday, recalculationCompoundingFrequencyOnDay);
 
         return loanApplication;
     }

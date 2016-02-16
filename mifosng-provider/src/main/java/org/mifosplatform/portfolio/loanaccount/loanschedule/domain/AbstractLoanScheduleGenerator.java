@@ -111,7 +111,8 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
         LocalDate firstRepaymentdate = this.scheduledDateGenerator.generateNextRepaymentDate(
                 loanApplicationTerms.getExpectedDisbursementDate(), loanApplicationTerms, isFirstRepayment, holidayDetailDTO);
         final LocalDate idealDisbursementDate = this.scheduledDateGenerator.idealDisbursementDateBasedOnFirstRepaymentDate(
-                loanApplicationTerms.getLoanTermPeriodFrequencyType(), loanApplicationTerms.getRepaymentEvery(), firstRepaymentdate);
+                loanApplicationTerms.getLoanTermPeriodFrequencyType(), loanApplicationTerms.getRepaymentEvery(), firstRepaymentdate,
+                loanApplicationTerms.getLoanCalendar(), loanApplicationTerms.getHolidayDetailDTO());
 
         if (!scheduleParams.isPartialUpdate()) {
             // Set Fixed Principal Amount
@@ -1702,7 +1703,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
 
             // get the loan application terms from the Loan object
             final LoanApplicationTerms loanApplicationTerms = loan.getLoanApplicationTerms(applicationCurrency, restCalendarInstance,
-                    compoundingCalendarInstance, loanCalendar, floatingRateDTO);
+                    compoundingCalendarInstance, loanCalendar, floatingRateDTO, holidayDetailDTO);
 
             // for applying variations
             Collection<LoanTermVariationsData> loanTermVariations = loanApplicationTerms.getLoanTermVariations().getInterestRateChanges();
@@ -2292,6 +2293,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
             final Map<LocalDate, Money> principalPortionMap, LoanRepaymentScheduleInstallment installment,
             Collection<RecalculationDetail> applicableTransactions, Money actualPrincipalPortion) {
         Money unprocessed = Money.zero(currency);
+        Money totalUnprocessed =  Money.zero(currency);
         for (RecalculationDetail detail : applicableTransactions) {
             if (!detail.isProcessed()) {
                 Money principalProcessed = installment.getPrincipalCompleted(currency);
@@ -2321,10 +2323,11 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                 LocalDate applicableDate = getNextRestScheduleDate(detail.getTransactionDate().minusDays(1), loanApplicationTerms,
                         holidayDetailDTO);
                 updateMapWithAmount(principalPortionMap, unprocessed, applicableDate);
+                totalUnprocessed = totalUnprocessed.plus(unprocessed);
 
             }
         }
-        return unprocessed;
+        return totalUnprocessed;
     }
 
     private void updateAmortization(final MathContext mc, final LoanApplicationTerms loanApplicationTerms, int periodNumber,

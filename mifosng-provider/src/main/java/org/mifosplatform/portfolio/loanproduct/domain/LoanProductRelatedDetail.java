@@ -324,18 +324,19 @@ public class LoanProductRelatedDetail implements LoanProductMinimumRepaymentSche
             actualChanges.put(repaymentFrequencyTypeParamName, newValue);
             actualChanges.put("locale", localeAsInput);
             this.repaymentPeriodFrequencyType = PeriodFrequencyType.fromInt(newValue);
+        }
+        
+        if (this.repaymentPeriodFrequencyType == PeriodFrequencyType.MONTHS) {
+        	Integer newValue = null;
+            final String repaymentFrequencyNthDayTypeParamName = "repaymentFrequencyNthDayType";
+            newValue = command.integerValueOfParameterNamed(repaymentFrequencyNthDayTypeParamName);
+            actualChanges.put(repaymentFrequencyNthDayTypeParamName, newValue);
 
-            if (this.repaymentPeriodFrequencyType == PeriodFrequencyType.MONTHS) {
-                final String repaymentFrequencyNthDayTypeParamName = "repaymentFrequencyNthDayType";
-                newValue = command.integerValueOfParameterNamed(repaymentFrequencyNthDayTypeParamName);
-                actualChanges.put(repaymentFrequencyNthDayTypeParamName, newValue);
+            final String repaymentFrequencyDayOfWeekTypeParamName = "repaymentFrequencyDayOfWeekType";
+            newValue = command.integerValueOfParameterNamed(repaymentFrequencyDayOfWeekTypeParamName);
+            actualChanges.put(repaymentFrequencyDayOfWeekTypeParamName, newValue);
 
-                final String repaymentFrequencyDayOfWeekTypeParamName = "repaymentFrequencyDayOfWeekType";
-                newValue = command.integerValueOfParameterNamed(repaymentFrequencyDayOfWeekTypeParamName);
-                actualChanges.put(repaymentFrequencyDayOfWeekTypeParamName, newValue);
-
-                actualChanges.put("locale", localeAsInput);
-            }
+            actualChanges.put("locale", localeAsInput);
         }
 
         final String numberOfRepaymentsParamName = "numberOfRepayments";
