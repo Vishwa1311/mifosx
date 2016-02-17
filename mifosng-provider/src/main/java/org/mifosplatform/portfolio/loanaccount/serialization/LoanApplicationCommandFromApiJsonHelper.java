@@ -27,7 +27,6 @@ import org.mifosplatform.portfolio.accountdetails.domain.AccountType;
 import org.mifosplatform.portfolio.loanaccount.api.LoanApiConstants;
 import org.mifosplatform.portfolio.loanaccount.domain.Loan;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanCharge;
-import org.mifosplatform.portfolio.loanaccount.domain.LoanInterestRecalculationDetails;
 import org.mifosplatform.portfolio.loanproduct.LoanProductConstants;
 import org.mifosplatform.portfolio.loanproduct.domain.InterestCalculationPeriodMethod;
 import org.mifosplatform.portfolio.loanproduct.domain.InterestMethod;
@@ -52,13 +51,8 @@ public final class LoanApplicationCommandFromApiJsonHelper {
             "repaymentFrequencyType", "repaymentFrequencyNthDayType", "repaymentFrequencyDayOfWeekType", "interestRatePerPeriod",
             "amortizationType", "interestType", LoanApiConstants.isFloatingInterestRate, LoanApiConstants.interestRateDifferential,
             "interestCalculationPeriodType", LoanProductConstants.allowPartialPeriodInterestCalcualtionParamName,
-            "interestRateFrequencyType", "expectedDisbursementDate", "repaymentsStartingFromDate",
-            "graceOnPrincipalPayment",
-            "graceOnInterestPayment",
-            "graceOnInterestCharged",
-            "interestChargedFromDate",
-            "submittedOnDate",
-            "submittedOnNote",
+            "interestRateFrequencyType", "expectedDisbursementDate", "repaymentsStartingFromDate", "graceOnPrincipalPayment",
+            "graceOnInterestPayment", "graceOnInterestCharged", "interestChargedFromDate", "submittedOnDate", "submittedOnNote",
             "accountNo",
             "externalId",
             "fundId",
@@ -72,8 +66,7 @@ public final class LoanApplicationCommandFromApiJsonHelper {
             "syncDisbursementWithMeeting",// optional
             "linkAccountId", LoanApiConstants.disbursementDataParameterName, LoanApiConstants.emiAmountParameterName,
             LoanApiConstants.maxOutstandingBalanceParameterName, LoanProductConstants.graceOnArrearsAgeingParameterName,
-            LoanProductConstants.recalculationRestFrequencyDateParamName,
-            LoanProductConstants.recalculationCompoundingFrequencyDateParamName, "createStandingInstructionAtDisbursement"));
+            "createStandingInstructionAtDisbursement"));
 
     private final FromJsonHelper fromApiJsonHelper;
     private final CalculateLoanScheduleQueryFromApiJsonHelper apiJsonHelper;
@@ -1125,20 +1118,6 @@ public final class LoanApplicationCommandFromApiJsonHelper {
 
     public void validateLoanForInterestRecalculation(final Loan loan) {
         final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
-        LoanInterestRecalculationDetails interestRecalculationDetails = loan.loanInterestRecalculationDetails();
-        /*if (!interestRecalculationDetails.getRestFrequencyType().isSameAsRepayment()) {
-            String paramName = LoanProductConstants.recalculationRestFrequencyDateParamName;
-            validateRecalcuationFrequency(interestRecalculationDetails.getRestFrequencyLocalDate(), loan.getExpectedDisbursedOnLocalDate(),
-                    dataValidationErrors, paramName);
-        }
-
-        if (interestRecalculationDetails.getInterestRecalculationCompoundingMethod().isCompoundingEnabled()
-                && !interestRecalculationDetails.getCompoundingFrequencyType().isSameAsRepayment()) {
-            String paramName = LoanProductConstants.recalculationCompoundingFrequencyDateParamName;
-            validateCompoundingFrequency(interestRecalculationDetails.getCompoundingFrequencyLocalDate(),
-                    loan.getExpectedDisbursedOnLocalDate(), dataValidationErrors, paramName);
-        }*/
-
         validateLoanCharges(loan.charges(), dataValidationErrors);
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException(dataValidationErrors); }
     }

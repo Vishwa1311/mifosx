@@ -42,9 +42,9 @@ public final class CalculateLoanScheduleQueryFromApiJsonHelper {
             "interestChargedFromDate", "submittedOnDate", "submittedOnNote", "locale", "dateFormat", "charges", "collateral",
             "syncDisbursementWithMeeting", "linkAccountId", LoanApiConstants.disbursementDataParameterName,
             LoanApiConstants.emiAmountParameterName, LoanApiConstants.maxOutstandingBalanceParameterName,
-            LoanProductConstants.graceOnArrearsAgeingParameterName, LoanProductConstants.recalculationRestFrequencyDateParamName,
-            "createStandingInstructionAtDisbursement", LoanApiConstants.isFloatingInterestRateParameterName,
-            LoanApiConstants.interestRateDifferentialParameterName, "repaymentFrequencyNthDayType", "repaymentFrequencyDayOfWeekType"));
+            LoanProductConstants.graceOnArrearsAgeingParameterName, "createStandingInstructionAtDisbursement",
+            LoanApiConstants.isFloatingInterestRateParameterName, LoanApiConstants.interestRateDifferentialParameterName,
+            "repaymentFrequencyNthDayType", "repaymentFrequencyDayOfWeekType"));
 
     private final FromJsonHelper fromApiJsonHelper;
 
@@ -98,7 +98,6 @@ public final class CalculateLoanScheduleQueryFromApiJsonHelper {
 
         validateRepaymentsStartingFromDateIsAfterDisbursementDate(dataValidationErrors, expectedDisbursementDate,
                 repaymentsStartingFromDate);
-
 
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist",
                 "Validation errors exist.", dataValidationErrors); }

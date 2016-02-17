@@ -26,7 +26,6 @@ import org.mifosplatform.infrastructure.core.data.ApiParameterError;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.mifosplatform.infrastructure.core.data.DataValidatorBuilder;
-import org.mifosplatform.infrastructure.core.data.EnumOptionData;
 import org.mifosplatform.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
@@ -44,8 +43,6 @@ import org.mifosplatform.portfolio.calendar.domain.CalendarInstanceRepository;
 import org.mifosplatform.portfolio.calendar.domain.CalendarRepository;
 import org.mifosplatform.portfolio.calendar.domain.CalendarType;
 import org.mifosplatform.portfolio.calendar.exception.CalendarNotFoundException;
-import org.mifosplatform.portfolio.calendar.service.CalendarEnumerations;
-import org.mifosplatform.portfolio.calendar.service.CalendarUtils;
 import org.mifosplatform.portfolio.charge.domain.Charge;
 import org.mifosplatform.portfolio.client.domain.AccountNumberGenerator;
 import org.mifosplatform.portfolio.client.domain.Client;
@@ -448,78 +445,6 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         this.calendarInstanceRepository.save(calendarInstance);
     }
 
-    private void updateRestCalendarDetailsForInterestRecalculation(final CalendarInstance calendarInstance, final Loan loan) {
-
-        Calendar interestRecalculationRecurrings = calendarInstance.getCalendar();
-        LocalDate calendarStartDate = loan.getExpectedDisbursedOnLocalDate();
-        /*if (calendarStartDate == null) {
-            calendarStartDate = loan.getExpectedDisbursedOnLocalDate();
-        }*/
-        Integer repeatsOnDay = null;
-        final RecalculationFrequencyType recalculationFrequencyType = loan.loanInterestRecalculationDetails().getRestFrequencyType();
-        Integer recalculationFrequencyNthDay = loan.loanInterestRecalculationDetails().getRestFrequencyOnDay();
-        if(recalculationFrequencyNthDay == null) {
-        	recalculationFrequencyNthDay = loan.loanInterestRecalculationDetails().getRestFrequencyNthDay();
-        	repeatsOnDay = loan.loanInterestRecalculationDetails().getRestFrequencyWeekday();
-        }
-
-        Integer frequency = loan.loanInterestRecalculationDetails().getRestInterval();
-
-        updateCalendar(loan, interestRecalculationRecurrings, calendarStartDate, recalculationFrequencyNthDay, repeatsOnDay, 
-        		recalculationFrequencyType, frequency);
-
-    }
-
-    private void updateCompoundingCalendarDetailsForInterestRecalculation(final CalendarInstance calendarInstance, final Loan loan) {
-
-        Calendar interestRecalculationRecurrings = calendarInstance.getCalendar();
-        LocalDate calendarStartDate = loan.getExpectedDisbursedOnLocalDate();
-        /*if (calendarStartDate == null) {
-            calendarStartDate = loan.getExpectedDisbursedOnLocalDate();
-        }*/
-        Integer repeatsOnDay = null;
-        final RecalculationFrequencyType recalculationFrequencyType = loan.loanInterestRecalculationDetails().getCompoundingFrequencyType();
-        Integer recalculationCompoundingFrequencyNthDay = loan.loanInterestRecalculationDetails().getCompoundingFrequencyOnDay();
-        if(recalculationCompoundingFrequencyNthDay == null) {
-        	recalculationCompoundingFrequencyNthDay = loan.loanInterestRecalculationDetails().getCompoundingFrequencyNthDay();
-        	repeatsOnDay = loan.loanInterestRecalculationDetails().getCompoundingFrequencyWeekday();
-        }
-
-        Integer frequency = loan.loanInterestRecalculationDetails().getCompoundingInterval();
-
-        updateCalendar(loan, interestRecalculationRecurrings, calendarStartDate, recalculationCompoundingFrequencyNthDay, 
-        		repeatsOnDay, recalculationFrequencyType, frequency);
-
-    }
-
-    private void updateCalendar(final Loan loan, Calendar interestRecalculationRecurrings, LocalDate calendarStartDate,
-    		final Integer recalculationFrequencyNthDay, final Integer repeatsOnDay, 
-    		final RecalculationFrequencyType recalculationFrequencyType, Integer frequency) {
-        CalendarFrequencyType calendarFrequencyType = CalendarFrequencyType.INVALID;
-        switch (recalculationFrequencyType) {
-            case DAILY:
-                calendarFrequencyType = CalendarFrequencyType.DAILY;
-            break;
-
-            case MONTHLY:
-                calendarFrequencyType = CalendarFrequencyType.MONTHLY;
-            break;
-            case SAME_AS_REPAYMENT_PERIOD:
-                calendarStartDate = loan.getExpectedDisbursedOnLocalDate();
-                frequency = loan.repaymentScheduleDetail().getRepayEvery();
-                calendarFrequencyType = CalendarFrequencyType.from(loan.repaymentScheduleDetail().getRepaymentPeriodFrequencyType());
-            break;
-            case WEEKLY:
-                calendarFrequencyType = CalendarFrequencyType.WEEKLY;
-            break;
-            default:
-            break;
-        }
-
-        interestRecalculationRecurrings.updateRepeatingCalendar(calendarStartDate, calendarFrequencyType, frequency, repeatsOnDay, 
-        		recalculationFrequencyNthDay);
-        this.calendarRepository.save(interestRecalculationRecurrings);
-    }
 
     @Transactional
     @Override
@@ -875,20 +800,6 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 this.fromApiJsonDeserializer.validateLoanForInterestRecalculation(existingLoanApplication);
                 if (changes.containsKey(LoanProductConstants.isInterestRecalculationEnabledParameterName)) {
                     createAndPersistCalendarInstanceForInterestRecalculation(existingLoanApplication);
-                } else {
-                    if (changes.containsKey(LoanProductConstants.recalculationRestFrequencyDateParamName)) {
-
-                        CalendarInstance calendarInstance = this.calendarInstanceRepository.findByEntityIdAndEntityTypeIdAndCalendarTypeId(
-                                existingLoanApplication.loanInterestRecalculationDetailId(),
-                                CalendarEntityType.LOAN_RECALCULATION_REST_DETAIL.getValue(), CalendarType.COLLECTION.getValue());
-                        updateRestCalendarDetailsForInterestRecalculation(calendarInstance, existingLoanApplication);
-                    }
-                    if (changes.containsKey(LoanProductConstants.recalculationCompoundingFrequencyDateParamName)) {
-                        CalendarInstance calendarInstance = this.calendarInstanceRepository.findByEntityIdAndEntityTypeIdAndCalendarTypeId(
-                                existingLoanApplication.loanInterestRecalculationDetailId(),
-                                CalendarEntityType.LOAN_RECALCULATION_COMPOUNDING_DETAIL.getValue(), CalendarType.COLLECTION.getValue());
-                        updateCompoundingCalendarDetailsForInterestRecalculation(calendarInstance, existingLoanApplication);
-                    }
                 }
 
             }

@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.joda.time.LocalDate;
 import org.mifosplatform.accounting.common.AccountingConstants.LOAN_PRODUCT_ACCOUNTING_PARAMS;
 import org.mifosplatform.accounting.common.AccountingRuleType;
 import org.mifosplatform.infrastructure.core.data.ApiParameterError;
@@ -77,10 +76,8 @@ public final class LoanProductDataValidator {
             LoanProductConstants.daysInYearTypeParameterName, LoanProductConstants.daysInMonthTypeParameterName,
             LoanProductConstants.rescheduleStrategyMethodParameterName,
             LoanProductConstants.interestRecalculationCompoundingMethodParameterName,
-            LoanProductConstants.recalculationRestFrequencyDateParamName,
             LoanProductConstants.recalculationRestFrequencyIntervalParameterName,
             LoanProductConstants.recalculationRestFrequencyTypeParameterName,
-            LoanProductConstants.recalculationCompoundingFrequencyDateParamName,
             LoanProductConstants.recalculationCompoundingFrequencyIntervalParameterName,
             LoanProductConstants.recalculationCompoundingFrequencyTypeParameterName,
             LoanProductConstants.isArrearsBasedOnOriginalScheduleParamName,
@@ -777,13 +774,6 @@ public final class LoanProductDataValidator {
         }
 
         if (!frequencyType.isSameAsRepayment()) {
-            /*if (loanProduct == null
-                    || this.fromApiJsonHelper.parameterExists(LoanProductConstants.recalculationRestFrequencyDateParamName, element)) {
-                final LocalDate recurrenceOnLocalDate = this.fromApiJsonHelper.extractLocalDateNamed(
-                        LoanProductConstants.recalculationRestFrequencyDateParamName, element);
-                baseDataValidator.reset().parameter(LoanProductConstants.recalculationRestFrequencyDateParamName)
-                        .value(recurrenceOnLocalDate).notNull();
-            }*/
             if (loanProduct == null
                     || this.fromApiJsonHelper
                             .parameterExists(LoanProductConstants.recalculationRestFrequencyIntervalParameterName, element)) {
@@ -832,14 +822,6 @@ public final class LoanProductDataValidator {
             }
 
             if (!compoundingfrequencyType.isSameAsRepayment()) {
-                /*if (loanProduct == null
-                        || this.fromApiJsonHelper.parameterExists(LoanProductConstants.recalculationCompoundingFrequencyDateParamName,
-                                element)) {
-                    final LocalDate recurrenceOnLocalDate = this.fromApiJsonHelper.extractLocalDateNamed(
-                            LoanProductConstants.recalculationCompoundingFrequencyDateParamName, element);
-                    baseDataValidator.reset().parameter(LoanProductConstants.recalculationCompoundingFrequencyDateParamName)
-                            .value(recurrenceOnLocalDate).notNull();
-                }*/
                 if (loanProduct == null
                         || this.fromApiJsonHelper.parameterExists(
                                 LoanProductConstants.recalculationCompoundingFrequencyIntervalParameterName, element)) {
