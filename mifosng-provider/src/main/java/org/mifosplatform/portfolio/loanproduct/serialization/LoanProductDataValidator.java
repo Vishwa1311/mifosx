@@ -92,7 +92,8 @@ public final class LoanProductDataValidator {
             LoanProductConstants.recalculationCompoundingFrequencyNthDayParamName,
             LoanProductConstants.recalculationCompoundingFrequencyOnDayParamName,
             LoanProductConstants.recalculationRestFrequencyWeekdayParamName,
-            LoanProductConstants.recalculationRestFrequencyNthDayParamName, LoanProductConstants.recalculationRestFrequencyOnDayParamName));
+            LoanProductConstants.recalculationRestFrequencyNthDayParamName, LoanProductConstants.recalculationRestFrequencyOnDayParamName,
+            LoanProductConstants.isCompoundingToBePostedAsTransactionParamName));
 
     private final FromJsonHelper fromApiJsonHelper;
 
