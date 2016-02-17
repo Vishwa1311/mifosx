@@ -380,6 +380,10 @@ public class LoanEnumerations {
                 optionData = new LoanTransactionEnumData(LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getValue().longValue(),
                         LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getCode(), "Refund");
             break;
+            case INCOME_POSTING:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.INCOME_POSTING.getValue().longValue(),
+                        LoanTransactionType.INCOME_POSTING.getCode(), "Income Posting");
+            break;
             default:
             break;
         }

@@ -11,6 +11,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -380,6 +381,9 @@ public class Loan extends AbstractPersistable<Long> {
     @Column(name = "interest_rate_differential", scale = 6, precision = 19, nullable = true)
     private BigDecimal interestRateDifferential;
 
+    @Column(name = "is_income_posted_as_transactions")
+	private Boolean isIncomePostedAsTransactions;
+
     public static Loan newIndividualLoanApplication(final String accountNo, final Client client, final Integer loanType,
             final LoanProduct loanProduct, final Fund fund, final Staff officer, final CodeValue loanPurpose,
             final LoanTransactionProcessingStrategy transactionProcessingStrategy,
@@ -494,6 +498,7 @@ public class Loan extends AbstractPersistable<Long> {
          */
 
         this.proposedPrincipal = this.loanRepaymentScheduleDetail.getPrincipal().getAmount();
+        this.isIncomePostedAsTransactions = false;
 
     }
 
@@ -3073,6 +3078,18 @@ public class Loan extends AbstractPersistable<Long> {
         return installment;
     }
 
+    private List<LoanTransaction> retreiveListOfIncomePostingTransactions() {
+        final List<LoanTransaction> incomePostTransactions = new ArrayList<>();
+        for (final LoanTransaction transaction : this.loanTransactions) {
+            if (transaction.isNotReversed() && transaction.isIncomePosting()) {
+                incomePostTransactions.add(transaction);
+            }
+        }
+        final LoanTransactionComparator transactionComparator = new LoanTransactionComparator();
+        Collections.sort(incomePostTransactions, transactionComparator);
+        return incomePostTransactions;
+    }
+
     private List<LoanTransaction> retreiveListOfTransactionsPostDisbursement() {
         final List<LoanTransaction> repaymentsOrWaivers = new ArrayList<>();
         for (final LoanTransaction transaction : this.loanTransactions) {
@@ -4549,7 +4566,9 @@ public class Loan extends AbstractPersistable<Long> {
     private LocalDate getLastUserTransactionDate() {
         LocalDate currentTransactionDate = getDisbursementDate();
         for (final LoanTransaction previousTransaction : this.loanTransactions) {
-            if (!(previousTransaction.isReversed() || previousTransaction.isAccrual())) {
+            if (!(previousTransaction.isReversed() 
+            		|| previousTransaction.isAccrual() 
+            		|| previousTransaction.isIncomePosting())) {
                 if (currentTransactionDate.isBefore(previousTransaction.getTransactionDate())) {
                     currentTransactionDate = previousTransaction.getTransactionDate();
                 }
@@ -4963,9 +4982,242 @@ public class Loan extends AbstractPersistable<Long> {
         }
 
         processPostDisbursementTransactions();
+        processIncomeTransactions(currentUser);
     }
 
-    public void processPostDisbursementTransactions() {
+    private void processPeriodicAccrualsAfterIncomeTransactions(LocalDate lastCompoundingDate, AppUser currentUser) {
+        if (isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
+			LocalDate lastInstallmentDate = this.getDisbursementDate();
+            Collection<LoanTransaction> accruals = retreiveListOfAccrualTransactions();
+        	for (LoanRepaymentScheduleInstallment installment : this.repaymentScheduleInstallments) {
+				if(installment.getDueDate().isBefore(lastCompoundingDate)
+						&& !accrualTransactionPresentForDate(accruals, installment.getDueDate().toDate())){
+					BigDecimal amount = installment.getInterestAccrued(getCurrency()).getAmount()
+							.add(installment.getFeeAccrued(getCurrency()).getAmount())
+							.add(installment.getPenaltyAccrued(getCurrency()).getAmount());
+					if(amount.compareTo(BigDecimal.ZERO) > 0){
+						LoanTransaction accrual = LoanTransaction.accrueTransaction(this, this.getOffice(), 
+								installment.getDueDate(), amount, installment.getInterestAccrued(getCurrency()).getAmount(), 
+								installment.getFeeAccrued(getCurrency()).getAmount(), 
+								installment.getPenaltyAccrued(getCurrency()).getAmount(), currentUser);
+						HashMap<String, Object> feeDetails = new HashMap<>();
+						determineFeeDetails(lastInstallmentDate, installment.getDueDate(), feeDetails);
+						updateLoanChargesPaidBy(accrual, feeDetails, installment);
+						this.loanTransactions.add(accrual);
+					}
+				}
+				lastInstallmentDate = installment.getDueDate();
+			}
+			HashMap<String, BigDecimal> accrualIncomeDetails = new HashMap<>(); 
+        	List<LoanTransaction> updatedAccruals = retreiveListOfAccrualTransactions();
+        	determineIncomeDetails(updatedAccruals, accrualIncomeDetails);
+        	
+			HashMap<String, BigDecimal> incomePostingDetails = new HashMap<>(); 
+        	List<LoanTransaction> incomePostings = retreiveListOfIncomePostingTransactions();
+        	determineIncomeDetails(incomePostings, incomePostingDetails);
+        	
+        	BigDecimal interestDiff = incomePostingDetails.get("interest").subtract(accrualIncomeDetails.get("interest"));
+        	BigDecimal feeDiff = incomePostingDetails.get("fee").subtract(accrualIncomeDetails.get("fee"));
+        	BigDecimal penaltyDiff = incomePostingDetails.get("penalty").subtract(accrualIncomeDetails.get("penalty"));
+        	BigDecimal amountDiff = interestDiff.add(feeDiff).add(penaltyDiff);
+        	
+        	if(interestDiff.compareTo(BigDecimal.ZERO) >= 0
+        			&& feeDiff.compareTo(BigDecimal.ZERO) >= 0
+        			&& penaltyDiff.compareTo(BigDecimal.ZERO) >= 0){
+        		LocalDate lastAccrualDate = this.getDisbursementDate();
+        		if(null != updatedAccruals && updatedAccruals.size() > 0){
+        			lastAccrualDate = updatedAccruals.get(updatedAccruals.size()-1).getTransactionDate();
+        		}
+				LoanTransaction accrual = LoanTransaction.accrueTransaction(this, this.getOffice(), 
+						lastCompoundingDate, amountDiff, interestDiff, 
+						feeDiff, penaltyDiff, currentUser);
+				HashMap<String, Object> feeDetails = new HashMap<>();
+				determineFeeDetails(lastAccrualDate, lastCompoundingDate, feeDetails);
+				updateLoanChargesPaidBy(accrual, feeDetails, null);
+				this.loanTransactions.add(accrual);
+        	}
+        	
+        }
+	}
+
+	private void updateLoanChargesPaidBy(LoanTransaction accrual,
+			HashMap<String, Object> feeDetails, LoanRepaymentScheduleInstallment installment) {
+		@SuppressWarnings("unchecked")
+		List<LoanCharge> loanCharges = (List<LoanCharge>) feeDetails.get("loanCharges");
+		@SuppressWarnings("unchecked")
+		List<LoanInstallmentCharge> loanInstallmentCharges = (List<LoanInstallmentCharge>) feeDetails.get("loanInstallmentCharges");
+		
+		for (LoanCharge loanCharge : loanCharges) {
+			Integer installmentNumber = null == installment? null: installment.getInstallmentNumber();
+	        final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(accrual, loanCharge, loanCharge.getAmount(
+	                getCurrency()).getAmount(), installmentNumber);
+	        accrual.getLoanChargesPaid().add(loanChargePaidBy);
+		}
+		for (LoanInstallmentCharge loanInstallmentCharge : loanInstallmentCharges) {
+			Integer installmentNumber = null == loanInstallmentCharge.getInstallment()? null
+					: loanInstallmentCharge.getInstallment().getInstallmentNumber();
+	        final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(accrual, loanInstallmentCharge.getLoancharge(), 
+	        		loanInstallmentCharge.getAmount(getCurrency()).getAmount(), installmentNumber);
+	        accrual.getLoanChargesPaid().add(loanChargePaidBy);
+		}
+		
+	}
+
+	private void determineIncomeDetails(
+			Collection<LoanTransaction> transactions,
+			HashMap<String, BigDecimal> incomeDetailsMap) {
+		BigDecimal interest = BigDecimal.ZERO;
+		BigDecimal fee = BigDecimal.ZERO;
+		BigDecimal penalty = BigDecimal.ZERO;
+		for (LoanTransaction transaction : transactions) {
+			interest = interest.add(transaction.getInterestPortion(getCurrency()).getAmount());
+			fee = fee.add(transaction.getFeeChargesPortion(getCurrency()).getAmount());
+			penalty = penalty.add(transaction.getPenaltyChargesPortion(getCurrency()).getAmount());
+		}
+		incomeDetailsMap.put("interest", interest);
+		incomeDetailsMap.put("fee", fee);
+		incomeDetailsMap.put("penalty", penalty);
+	}
+
+	private boolean accrualTransactionPresentForDate(
+			Collection<LoanTransaction> accruals, Date date) {
+		for (LoanTransaction loanTransaction : accruals) {
+			if(loanTransaction.getDateOf().compareTo(date) == 0){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void processIncomeTransactions(AppUser currentUser) {
+		if(this.isIncomePostedAsTransactions){
+			LocalDate lastCompoundingDate = this.getDisbursementDate();
+			List<LoanInterestRecalcualtionAdditionalDetails> compoundingDetails = extractInterestRecalculationAdditionalDetails();
+			List<LoanTransaction> incomeTransactions = retreiveListOfIncomePostingTransactions();
+			for (LoanInterestRecalcualtionAdditionalDetails compoundingDetail : compoundingDetails) {
+				if(!compoundingDetail.getEffectiveDate().isBefore(DateUtils.getLocalDateOfTenant())){
+					break;
+				}
+				LoanTransaction incomeTransaction = getIncomeTransactionForDate(incomeTransactions, compoundingDetail.getEffectiveDate());
+				
+				if(incomeTransaction == null){
+					addIncomeTransaction(compoundingDetail, lastCompoundingDate, currentUser);
+				}else if(incomeTransaction.getAmount(getCurrency()).getAmount().compareTo(compoundingDetail.getAmount())!=0){
+					incomeTransaction.reverse();
+					addIncomeTransaction(compoundingDetail, lastCompoundingDate, currentUser);
+				}
+				lastCompoundingDate = compoundingDetail.getEffectiveDate();
+			}
+			
+	        processPeriodicAccrualsAfterIncomeTransactions(lastCompoundingDate, currentUser);
+		}
+		
+	}
+
+	private void addIncomeTransaction(
+			LoanInterestRecalcualtionAdditionalDetails compoundingDetail,
+			LocalDate lastCompoundingDate, AppUser currentUser) {
+		BigDecimal interest = BigDecimal.ZERO;
+		BigDecimal fee = BigDecimal.ZERO;
+		BigDecimal penalties = BigDecimal.ZERO;
+
+		if(this.loanInterestRecalculationDetails
+				.getInterestRecalculationCompoundingMethod()
+				.equals(InterestRecalculationCompoundingMethod.INTEREST)){
+			interest = compoundingDetail.getAmount();					
+		}else if(this.loanInterestRecalculationDetails
+				.getInterestRecalculationCompoundingMethod()
+				.equals(InterestRecalculationCompoundingMethod.FEE)){
+			HashMap<String, Object> feeDetails = new HashMap<>(); 
+			determineFeeDetails(lastCompoundingDate, compoundingDetail.getEffectiveDate(), feeDetails);
+			fee = (BigDecimal)feeDetails.get("fee");
+			penalties = (BigDecimal)feeDetails.get("penalties");
+		}else if(this.loanInterestRecalculationDetails
+				.getInterestRecalculationCompoundingMethod()
+				.equals(InterestRecalculationCompoundingMethod.INTEREST_AND_FEE)){
+			HashMap<String, Object> feeDetails = new HashMap<>(); 
+			determineFeeDetails(lastCompoundingDate, compoundingDetail.getEffectiveDate(), feeDetails);
+			fee = (BigDecimal)feeDetails.get("fee");
+			penalties = (BigDecimal)feeDetails.get("penalties");
+			interest = compoundingDetail.getAmount().subtract(fee).subtract(penalties);
+		}
+		
+		LoanTransaction transaction = LoanTransaction.incomePosting(this, this.getOffice(), compoundingDetail.getEffectiveDate().toDate(),
+				compoundingDetail.getAmount(), interest, fee, penalties, currentUser);
+		this.loanTransactions.add(transaction);
+	}
+
+	private void determineFeeDetails(LocalDate fromDate,
+			LocalDate toDate, HashMap<String, Object> feeDetails) {
+		BigDecimal fee = BigDecimal.ZERO;
+		BigDecimal penalties = BigDecimal.ZERO;
+		
+		List<LoanRepaymentScheduleInstallment> installments = new ArrayList<>();
+		for (LoanRepaymentScheduleInstallment loanRepaymentScheduleInstallment : this.repaymentScheduleInstallments) {
+			if(loanRepaymentScheduleInstallment.getDueDate().isAfter(fromDate)
+					&& !loanRepaymentScheduleInstallment.getDueDate().isAfter(toDate)){
+				installments.add(loanRepaymentScheduleInstallment);
+			}
+		}
+
+		List<LoanCharge> loanCharges = new ArrayList<>();
+		List<LoanInstallmentCharge> loanInstallmentCharges = new ArrayList<>();
+		for (LoanCharge loanCharge : this.charges()) {
+			if(loanCharge.isDueForCollectionFromAndUpToAndIncluding(fromDate, toDate)){
+				if(loanCharge.isPenaltyCharge() && !loanCharge.isInstalmentFee()){
+					penalties = penalties.add(loanCharge.amount());
+					loanCharges.add(loanCharge);
+				}else if(!loanCharge.isInstalmentFee()){
+					fee = fee.add(loanCharge.amount());
+					loanCharges.add(loanCharge);
+				}else{
+					for (LoanInstallmentCharge installmentCharge : loanCharge.installmentCharges()) {
+						if(installments.contains(installmentCharge.getRepaymentInstallment())){
+							fee = fee.add(installmentCharge.getAmount());
+							loanInstallmentCharges.add(installmentCharge);
+						}
+					}
+				}
+			}
+		}
+		
+		feeDetails.put("fee", fee);
+		feeDetails.put("penalties", penalties);
+		feeDetails.put("loanCharges", loanCharges);
+		feeDetails.put("loanInstallmentCharges", loanInstallmentCharges);
+	}
+
+	private LoanTransaction getIncomeTransactionForDate(
+			List<LoanTransaction> interestTransactions, LocalDate effectiveDate) {
+		for (LoanTransaction loanTransaction : interestTransactions) {
+			if(loanTransaction.getTransactionDate().isEqual(effectiveDate)){
+				return loanTransaction;
+			}
+		}
+		return null;
+	}
+
+	private List<LoanInterestRecalcualtionAdditionalDetails> extractInterestRecalculationAdditionalDetails() {
+		List<LoanInterestRecalcualtionAdditionalDetails> retDetails = new ArrayList<>();
+		if(null != this.repaymentScheduleInstallments && this.repaymentScheduleInstallments.size() > 0){
+			Iterator<LoanRepaymentScheduleInstallment> installmentsItr = this.repaymentScheduleInstallments.iterator();
+			while(installmentsItr.hasNext()){
+				LoanRepaymentScheduleInstallment installment = installmentsItr.next();
+				if(null!=installment.getLoanCompoundingDetails()){
+					retDetails.addAll(installment.getLoanCompoundingDetails());
+				}
+			}
+		}
+		retDetails.sort(new Comparator<LoanInterestRecalcualtionAdditionalDetails>() {
+			@Override
+			public int compare(LoanInterestRecalcualtionAdditionalDetails first, LoanInterestRecalcualtionAdditionalDetails second) {
+				return first.getEffectiveDate().compareTo(second.getEffectiveDate());
+			}
+		});
+		return retDetails;
+	}
+
+	public void processPostDisbursementTransactions() {
         final LoanRepaymentScheduleTransactionProcessor loanRepaymentScheduleTransactionProcessor = this.transactionProcessorFactory
                 .determineProcessor(this.transactionProcessingStrategy);
         final List<LoanTransaction> allNonContraTransactionsPostDisbursement = retreiveListOfTransactionsPostDisbursement();
@@ -5121,11 +5373,15 @@ public class Loan extends AbstractPersistable<Long> {
         Money outstanding = Money.zero(getCurrency());
         List<LoanTransaction> loanTransactions = retreiveListOfTransactionsExcludeAccruals();
         for (LoanTransaction loanTransaction : loanTransactions) {
-            if (loanTransaction.isDisbursement()) {
+            if (loanTransaction.isDisbursement() || loanTransaction.isIncomePosting()) {
                 outstanding = outstanding.plus(loanTransaction.getAmount(getCurrency()));
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             } else {
-                outstanding = outstanding.minus(loanTransaction.getPrincipalPortion(getCurrency()));
+            	if(this.isIncomePostedAsTransactions){
+                    outstanding = outstanding.minus(loanTransaction.getAmount(getCurrency()));
+            	}else{
+                    outstanding = outstanding.minus(loanTransaction.getPrincipalPortion(getCurrency()));
+            	}
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             }
         }

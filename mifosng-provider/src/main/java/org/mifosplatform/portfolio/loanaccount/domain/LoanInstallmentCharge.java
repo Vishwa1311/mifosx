@@ -275,4 +275,12 @@ public class LoanInstallmentCharge extends AbstractPersistable<Long> {
         return amountToDeductOnThisCharge;
     }
 
+	public LoanCharge getLoancharge() {
+		return this.loancharge;
+	}
+
+	public LoanRepaymentScheduleInstallment getInstallment() {
+		return this.installment;
+	}
+
 }

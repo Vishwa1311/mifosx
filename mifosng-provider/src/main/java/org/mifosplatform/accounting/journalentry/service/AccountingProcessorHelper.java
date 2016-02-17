@@ -655,9 +655,15 @@ public class AccountingProcessorHelper {
             loanTransaction = this.loanTransactionRepository.findOne(id);
             modifiedTransactionId = LOAN_TRANSACTION_IDENTIFIER + transactionId;
         }
-        final JournalEntry journalEntry = JournalEntry.createNew(office, paymentDetail, account, currencyCode, modifiedTransactionId,
-                manualEntry, transactionDate, JournalEntryType.CREDIT, amount, null, PortfolioProductType.LOAN.getValue(), loanId, null,
-                loanTransaction, savingsAccountTransaction, clientTransaction);
+        JournalEntry journalEntry = this.glJournalEntryRepository.findLOANJournalEntryWith(account.getId(), modifiedTransactionId, transactionDate, 
+        		JournalEntryType.CREDIT.getValue(), loanId, Long.parseLong(transactionId));
+        if(null == journalEntry){
+        	journalEntry = JournalEntry.createNew(office, paymentDetail, account, currencyCode, modifiedTransactionId,
+                    manualEntry, transactionDate, JournalEntryType.CREDIT, amount, null, PortfolioProductType.LOAN.getValue(), loanId, null,
+                    loanTransaction, savingsAccountTransaction, clientTransaction);
+        }else{
+        	journalEntry.setAmount(journalEntry.getAmount().add(amount));
+        }
         this.glJournalEntryRepository.saveAndFlush(journalEntry);
     }
 
@@ -701,9 +707,15 @@ public class AccountingProcessorHelper {
             loanTransaction = this.loanTransactionRepository.findOne(id);
             modifiedTransactionId = LOAN_TRANSACTION_IDENTIFIER + transactionId;
         }
-        final JournalEntry journalEntry = JournalEntry.createNew(office, paymentDetail, account, currencyCode, modifiedTransactionId,
-                manualEntry, transactionDate, JournalEntryType.DEBIT, amount, null, PortfolioProductType.LOAN.getValue(), loanId, null,
-                loanTransaction, savingsAccountTransaction, clientTransaction);
+        JournalEntry journalEntry = this.glJournalEntryRepository.findLOANJournalEntryWith(account.getId(), modifiedTransactionId, transactionDate, 
+        		JournalEntryType.DEBIT.getValue(), loanId, Long.parseLong(transactionId));
+        if(null == journalEntry){
+            journalEntry = JournalEntry.createNew(office, paymentDetail, account, currencyCode, modifiedTransactionId,
+                    manualEntry, transactionDate, JournalEntryType.DEBIT, amount, null, PortfolioProductType.LOAN.getValue(), loanId, null,
+                    loanTransaction, savingsAccountTransaction, clientTransaction);
+        }else{
+        	journalEntry.setAmount(journalEntry.getAmount().add(amount));
+        }
         this.glJournalEntryRepository.saveAndFlush(journalEntry);
     }
 
