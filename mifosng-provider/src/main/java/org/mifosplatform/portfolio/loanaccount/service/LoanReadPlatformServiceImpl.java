@@ -533,7 +533,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " l.principal_amount_proposed as proposedPrincipal, l.principal_amount as principal, l.approved_principal as approvedPrincipal, l.arrearstolerance_amount as inArrearsTolerance, l.number_of_repayments as numberOfRepayments, l.repay_every as repaymentEvery,"
                     + " l.grace_on_principal_periods as graceOnPrincipalPayment, l.grace_on_interest_periods as graceOnInterestPayment, l.grace_interest_free_periods as graceOnInterestCharged,l.grace_on_arrears_ageing as graceOnArrearsAgeing,"
                     + " l.nominal_interest_rate_per_period as interestRatePerPeriod, l.annual_nominal_interest_rate as annualInterestRate, "
-                    + " l.repayment_period_frequency_enum as repaymentFrequencyType, l.repayment_frequency_nth_day_enum as repaymentFrequencyNthDayType, l.repayment_frequency_day_of_week_enum as repaymentFrequencyDayOfWeekType, l.interest_period_frequency_enum as interestRateFrequencyType, "
+                    + " l.repayment_period_frequency_enum as repaymentFrequencyType, l.interest_period_frequency_enum as interestRateFrequencyType, "
                     + " l.term_frequency as termFrequency, l.term_period_frequency_enum as termPeriodFrequencyType, "
                     + " l.amortization_method_enum as amortizationType, l.interest_method_enum as interestType, l.interest_calculated_in_period_enum as interestCalculationPeriodType,"
                     + " l.allow_partial_period_interest_calcualtion as allowPartialPeriodInterestCalcualtion,"
@@ -740,13 +740,13 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final int repaymentFrequencyTypeInt = JdbcSupport.getInteger(rs, "repaymentFrequencyType");
             final EnumOptionData repaymentFrequencyType = LoanEnumerations.repaymentFrequencyType(repaymentFrequencyTypeInt);
 
-            final Integer repaymentFrequencyNthDayTypeInt = JdbcSupport.getInteger(rs, "repaymentFrequencyNthDayType");
+            /*final Integer repaymentFrequencyNthDayTypeInt = JdbcSupport.getInteger(rs, "repaymentFrequencyNthDayType");
             final EnumOptionData repaymentFrequencyNthDayType = LoanEnumerations
                     .repaymentFrequencyNthDayType(repaymentFrequencyNthDayTypeInt);
 
             final Integer repaymentFrequencyDayOfWeekTypeInt = JdbcSupport.getInteger(rs, "repaymentFrequencyDayOfWeekType");
             final EnumOptionData repaymentFrequencyDayOfWeekType = LoanEnumerations
-                    .repaymentFrequencyDayOfWeekType(repaymentFrequencyDayOfWeekTypeInt);
+                    .repaymentFrequencyDayOfWeekType(repaymentFrequencyDayOfWeekTypeInt);*/
 
             final int interestRateFrequencyTypeInt = JdbcSupport.getInteger(rs, "interestRateFrequencyType");
             final EnumOptionData interestRateFrequencyType = LoanEnumerations.interestRateFrequencyType(interestRateFrequencyTypeInt);
@@ -908,8 +908,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     clientOfficeId, groupData, loanType, loanProductId, loanProductName, loanProductDescription,
                     isLoanProductLinkedToFloatingRate, fundId, fundName, loanPurposeId, loanPurposeName, loanOfficerId, loanOfficerName,
                     currencyData, proposedPrincipal, principal, approvedPrincipal, totalOverpaid, inArrearsTolerance, termFrequency,
-                    termPeriodFrequencyType, numberOfRepayments, repaymentEvery, repaymentFrequencyType, repaymentFrequencyNthDayType,
-                    repaymentFrequencyDayOfWeekType, transactionStrategyId, transactionStrategyName, amortizationType,
+                    termPeriodFrequencyType, numberOfRepayments, repaymentEvery, repaymentFrequencyType, null,
+                    null, transactionStrategyId, transactionStrategyName, amortizationType,
                     interestRatePerPeriod, interestRateFrequencyType, annualInterestRate, interestType, isFloatingInterestRate,
                     interestRateDifferential, interestCalculationPeriodType, allowPartialPeriodInterestCalcualtion,
                     expectedFirstRepaymentOnDate, graceOnPrincipalPayment, graceOnInterestPayment, graceOnInterestCharged,

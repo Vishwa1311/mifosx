@@ -260,7 +260,7 @@ public final class LoanApplicationTerms {
         final DaysInYearType daysInYearType = loanProductRelatedDetail.fetchDaysInYearType();
         final boolean isInterestRecalculationEnabled = loanProductRelatedDetail.isInterestRecalculationEnabled();
         return new LoanApplicationTerms(applicationCurrency, loanTermFrequency, loanTermPeriodFrequencyType, numberOfRepayments,
-                repaymentEvery, repaymentPeriodFrequencyType, nthDay.getValue(), dayOfWeek, amortizationMethod, interestMethod,
+                repaymentEvery, repaymentPeriodFrequencyType, ((nthDay != null) ? nthDay.getValue() : null), dayOfWeek, amortizationMethod, interestMethod,
                 interestRatePerPeriod, interestRatePeriodFrequencyType, annualNominalInterestRate, interestCalculationPeriodMethod,
                 allowPartialPeriodInterestCalcualtion, principalMoney, expectedDisbursementDate, repaymentsStartingFromDate,
                 calculatedRepaymentsStartingFromDate, graceOnPrincipalPayment, graceOnInterestPayment, graceOnInterestCharged,

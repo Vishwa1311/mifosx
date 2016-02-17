@@ -66,6 +66,7 @@ import org.mifosplatform.organisation.workingdays.service.WorkingDaysUtil;
 import org.mifosplatform.portfolio.accountdetails.domain.AccountType;
 import org.mifosplatform.portfolio.calendar.domain.Calendar;
 import org.mifosplatform.portfolio.calendar.domain.CalendarInstance;
+import org.mifosplatform.portfolio.calendar.domain.CalendarWeekDaysType;
 import org.mifosplatform.portfolio.calendar.service.CalendarUtils;
 import org.mifosplatform.portfolio.charge.domain.Charge;
 import org.mifosplatform.portfolio.charge.domain.ChargeCalculationType;
@@ -5246,7 +5247,12 @@ public class Loan extends AbstractPersistable<Long> {
         DayOfWeekType dayOfWeekType = null;
         if(loanCalendar != null) {
         	nthDayType = CalendarUtils.getRepeatsOnNthDayOfMonth(loanCalendar.getRecurrence());
-        	dayOfWeekType = DayOfWeekType.fromInt(CalendarUtils.getRepeatsOnDay(loanCalendar.getRecurrence()).getValue());
+        	CalendarWeekDaysType getRepeatsOnDay = CalendarUtils.getRepeatsOnDay(loanCalendar.getRecurrence());
+        	Integer getRepeatsOnDayValue = null;
+        	if (getRepeatsOnDay != null)
+        		getRepeatsOnDayValue = getRepeatsOnDay.getValue();
+        	if (getRepeatsOnDayValue != null)
+        		dayOfWeekType = DayOfWeekType.fromInt(getRepeatsOnDayValue);
         }
 
         final Integer numberOfRepayments = this.loanRepaymentScheduleDetail.getNumberOfRepayments();
