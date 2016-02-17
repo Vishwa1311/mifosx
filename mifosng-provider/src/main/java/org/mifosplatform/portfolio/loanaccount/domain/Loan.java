@@ -3103,7 +3103,7 @@ public class Loan extends AbstractPersistable<Long> {
         for (final LoanTransaction transaction : this.loanTransactions) {
             if (transaction.isNotReversed()
                     && !(transaction.isDisbursement() || transaction.isAccrual() || transaction.isRepaymentAtDisbursement() || transaction
-                            .isNonMonetaryTransaction())) {
+                            .isNonMonetaryTransaction() || transaction.isIncomePosting())) {
                 repaymentsOrWaivers.add(transaction);
             }
         }
@@ -5148,11 +5148,11 @@ public class Loan extends AbstractPersistable<Long> {
 		BigDecimal fee = BigDecimal.ZERO;
 		BigDecimal penalties = BigDecimal.ZERO;
 		
-		List<LoanRepaymentScheduleInstallment> installments = new ArrayList<>();
+		List<Integer> installments = new ArrayList<>();
 		for (LoanRepaymentScheduleInstallment loanRepaymentScheduleInstallment : this.repaymentScheduleInstallments) {
 			if(loanRepaymentScheduleInstallment.getDueDate().isAfter(fromDate)
 					&& !loanRepaymentScheduleInstallment.getDueDate().isAfter(toDate)){
-				installments.add(loanRepaymentScheduleInstallment);
+				installments.add(loanRepaymentScheduleInstallment.getInstallmentNumber());
 			}
 		}
 
@@ -5166,12 +5166,12 @@ public class Loan extends AbstractPersistable<Long> {
 				}else if(!loanCharge.isInstalmentFee()){
 					fee = fee.add(loanCharge.amount());
 					loanCharges.add(loanCharge);
-				}else{
-					for (LoanInstallmentCharge installmentCharge : loanCharge.installmentCharges()) {
-						if(installments.contains(installmentCharge.getRepaymentInstallment())){
-							fee = fee.add(installmentCharge.getAmount());
-							loanInstallmentCharges.add(installmentCharge);
-						}
+				}
+			}else if(loanCharge.isInstalmentFee()){
+				for (LoanInstallmentCharge installmentCharge : loanCharge.installmentCharges()) {
+					if(installments.contains(installmentCharge.getRepaymentInstallment().getInstallmentNumber())){
+						fee = fee.add(installmentCharge.getAmount());
+						loanInstallmentCharges.add(installmentCharge);
 					}
 				}
 			}
