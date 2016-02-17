@@ -5204,7 +5204,7 @@ public class Loan extends AbstractPersistable<Long> {
 				}
 			}
 		}
-		retDetails.sort(new Comparator<LoanInterestRecalcualtionAdditionalDetails>() {
+		Collections.sort(retDetails, new Comparator<LoanInterestRecalcualtionAdditionalDetails>() {
 			@Override
 			public int compare(LoanInterestRecalcualtionAdditionalDetails first, LoanInterestRecalcualtionAdditionalDetails second) {
 				return first.getEffectiveDate().compareTo(second.getEffectiveDate());
