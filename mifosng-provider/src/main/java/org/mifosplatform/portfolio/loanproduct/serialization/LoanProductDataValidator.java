@@ -91,8 +91,8 @@ public final class LoanProductDataValidator {
             LoanProductConstants.maximumGapBetweenInstallments, LoanProductConstants.recalculationCompoundingFrequencyWeekdayParamName,
             LoanProductConstants.recalculationCompoundingFrequencyNthDayParamName,
             LoanProductConstants.recalculationCompoundingFrequencyOnDayParamName,
-            LoanProductConstants.recalculationRestFrequencyWeekdayParamName, LoanProductConstants.recalculationRestFrequencyNthDayParamName,
-            LoanProductConstants.recalculationRestFrequencyOnDayParamName));
+            LoanProductConstants.recalculationRestFrequencyWeekdayParamName,
+            LoanProductConstants.recalculationRestFrequencyNthDayParamName, LoanProductConstants.recalculationRestFrequencyOnDayParamName));
 
     private final FromJsonHelper fromApiJsonHelper;
 
@@ -802,7 +802,7 @@ public final class LoanProductDataValidator {
                             Integer repaymentFrequencyTypeVal = this.fromApiJsonHelper.extractIntegerNamed("repaymentFrequencyType",
                                     element, Locale.getDefault());
                             repaymentFrequencyType = PeriodFrequencyType.fromInt(repaymentFrequencyTypeVal);
-                        } else if(loanProduct != null){
+                        } else if (loanProduct != null) {
                             repaymentFrequencyType = loanProduct.getLoanProductRelatedDetail().getRepaymentPeriodFrequencyType();
                         }
                         if (!compoundingfrequencyType.isSameFrequency(repaymentFrequencyType)) {
@@ -845,6 +845,13 @@ public final class LoanProductDataValidator {
                     LoanProductConstants.isArrearsBasedOnOriginalScheduleParamName, element);
             baseDataValidator.reset().parameter(LoanProductConstants.isArrearsBasedOnOriginalScheduleParamName)
                     .value(isArrearsBasedOnOriginalSchedule).notNull().isOneOfTheseValues(true, false);
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.isCompoundingToBePostedAsTransactionParamName, element)) {
+            final Boolean isCompoundingToBePostedAsTransactions = this.fromApiJsonHelper.extractBooleanNamed(
+                    LoanProductConstants.isCompoundingToBePostedAsTransactionParamName, element);
+            baseDataValidator.reset().parameter(LoanProductConstants.isCompoundingToBePostedAsTransactionParamName)
+                    .value(isCompoundingToBePostedAsTransactions).notNull().isOneOfTheseValues(true, false);
         }
 
         final Integer preCloseInterestCalculationStrategy = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(

@@ -106,7 +106,6 @@ import org.mifosplatform.portfolio.loanaccount.loanschedule.domain.LoanApplicati
 import org.mifosplatform.portfolio.loanaccount.loanschedule.domain.LoanScheduleGenerator;
 import org.mifosplatform.portfolio.loanaccount.loanschedule.domain.LoanScheduleModel;
 import org.mifosplatform.portfolio.loanaccount.loanschedule.domain.LoanScheduleModelPeriod;
-import org.mifosplatform.portfolio.loanproduct.LoanProductConstants;
 import org.mifosplatform.portfolio.loanproduct.domain.AmortizationMethod;
 import org.mifosplatform.portfolio.loanproduct.domain.InterestCalculationPeriodMethod;
 import org.mifosplatform.portfolio.loanproduct.domain.InterestMethod;
@@ -176,11 +175,13 @@ public class Loan extends AbstractPersistable<Long> {
     @Embedded
     private LoanProductRelatedDetail loanRepaymentScheduleDetail;
 
-    /*@Column(name = "repayment_frequency_nth_day_enum", nullable = true)
-    private Integer repaymentFrequencyNthDayType;
-
-    @Column(name = "repayment_frequency_day_of_week_enum", nullable = true)
-    private Integer repaymentFrequencyDayOfWeekType;*/
+    /*
+     * @Column(name = "repayment_frequency_nth_day_enum", nullable = true)
+     * private Integer repaymentFrequencyNthDayType;
+     * 
+     * @Column(name = "repayment_frequency_day_of_week_enum", nullable = true)
+     * private Integer repaymentFrequencyDayOfWeekType;
+     */
 
     @Column(name = "term_frequency", nullable = false)
     private Integer termFrequency;
@@ -1249,26 +1250,39 @@ public class Loan extends AbstractPersistable<Long> {
 
         final String dateFormatAsInput = command.dateFormat();
         final String localeAsInput = command.locale();
-        /*final LocalDate recalculationRestFrequencyDate = command
-                .localDateValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyDateParamName);
-        final LocalDate recalculationCompoundingFrequencyDate = command
-                .localDateValueOfParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyDateParamName);
-        final Integer recalculationRestFrequencyNthDay = command.
-        		integerValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyNthDayParamName);
-        final Integer recalculationRestFrequencyWeekday = command.
-        		integerValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyWeekdayParamName);
-        final Integer recalculationRestFrequencyOnDay = command.
-        		integerValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyOnDayParamName);
-        
-        final Integer recalculationCompoundingFrequencyNthDay = command.integerValueOfParameterNamed(
-                LoanProductConstants.recalculationCompoundingFrequencyNthDayParamName);
-        final Integer recalculationCompoundingFrequencyWeekday = command.integerValueOfParameterNamed(
-                LoanProductConstants.recalculationCompoundingFrequencyWeekdayParamName);
-        final Integer recalculationCompoundingFrequencyOnDay = command.integerValueOfParameterNamed(
-                LoanProductConstants.recalculationCompoundingFrequencyOnDayParamName);
-        updateLoanInterestRecalculationSettings(recalculationRestFrequencyNthDay, recalculationRestFrequencyWeekday, 
-        		recalculationRestFrequencyOnDay, recalculationCompoundingFrequencyNthDay, recalculationCompoundingFrequencyWeekday,
-        		recalculationCompoundingFrequencyOnDay, command, actualChanges);*/
+        /*
+         * final LocalDate recalculationRestFrequencyDate = command
+         * .localDateValueOfParameterNamed
+         * (LoanProductConstants.recalculationRestFrequencyDateParamName); final
+         * LocalDate recalculationCompoundingFrequencyDate = command
+         * .localDateValueOfParameterNamed
+         * (LoanProductConstants.recalculationCompoundingFrequencyDateParamName
+         * ); final Integer recalculationRestFrequencyNthDay = command.
+         * integerValueOfParameterNamed
+         * (LoanProductConstants.recalculationRestFrequencyNthDayParamName);
+         * final Integer recalculationRestFrequencyWeekday = command.
+         * integerValueOfParameterNamed
+         * (LoanProductConstants.recalculationRestFrequencyWeekdayParamName);
+         * final Integer recalculationRestFrequencyOnDay = command.
+         * integerValueOfParameterNamed
+         * (LoanProductConstants.recalculationRestFrequencyOnDayParamName);
+         * 
+         * final Integer recalculationCompoundingFrequencyNthDay =
+         * command.integerValueOfParameterNamed(
+         * LoanProductConstants.recalculationCompoundingFrequencyNthDayParamName
+         * ); final Integer recalculationCompoundingFrequencyWeekday =
+         * command.integerValueOfParameterNamed(
+         * LoanProductConstants.recalculationCompoundingFrequencyWeekdayParamName
+         * ); final Integer recalculationCompoundingFrequencyOnDay =
+         * command.integerValueOfParameterNamed(
+         * LoanProductConstants.recalculationCompoundingFrequencyOnDayParamName
+         * );
+         * updateLoanInterestRecalculationSettings(recalculationRestFrequencyNthDay
+         * , recalculationRestFrequencyWeekday, recalculationRestFrequencyOnDay,
+         * recalculationCompoundingFrequencyNthDay,
+         * recalculationCompoundingFrequencyWeekday,
+         * recalculationCompoundingFrequencyOnDay, command, actualChanges);
+         */
 
         final String accountNoParamName = "accountNo";
         if (command.isChangeInStringParameterNamed(accountNoParamName, this.accountNumber)) {
@@ -1554,41 +1568,49 @@ public class Loan extends AbstractPersistable<Long> {
     /**
      * Update interest recalculation settings if product configuration changes
      */
-    /*public void updateLoanInterestRecalculationSettings(final Integer recalculationRestFrequencyNthDay,
-    		final Integer recalculationRestFrequencyWeekday, final Integer recalculationRestFrequencyOnDay,
-    		final Integer recalculationCompoundingFrequencyNthDay, final Integer recalculationCompoundingFrequencyWeekday, 
-    		final Integer recalculationCompoundingFrequencyOnDay, final JsonCommand command, final Map<String, Object> actualChanges) {
-
-        if (isInterestRecalculationEnabledForProduct()) {
-            Date restFrequencyDate = null;
-            if (recalculationRestFrequencyDate != null) {
-                restFrequencyDate = recalculationRestFrequencyDate.toDate();
-            }
-
-            Date compoundingFrequencyDate = null;
-            if (recalculationCompoundingFrequencyDate != null) {
-                compoundingFrequencyDate = recalculationCompoundingFrequencyDate.toDate();
-            }
-            if (this.loanInterestRecalculationDetails == null) {
-                actualChanges.put(LoanProductConstants.isInterestRecalculationEnabledParameterName, true);
-                this.loanInterestRecalculationDetails = LoanInterestRecalculationDetails.createFrom(this.loanProduct
-                        .getProductInterestRecalculationDetails().getInterestRecalculationCompoundingMethod(), this.loanProduct
-                        .getProductInterestRecalculationDetails().getRescheduleStrategyMethod(), this.loanProduct
-                        .getProductInterestRecalculationDetails().getRestFrequencyType().getValue(), this.loanProduct
-                        .getProductInterestRecalculationDetails().getRestInterval(), recalculationRestFrequencyNthDay, 
-                        recalculationRestFrequencyWeekday, recalculationRestFrequencyOnDay, this.loanProduct
-                        .getProductInterestRecalculationDetails().getCompoundingFrequencyType().getValue(), this.loanProduct
-                        .getProductInterestRecalculationDetails().getCompoundingInterval(), recalculationCompoundingFrequencyNthDay,
-                        recalculationCompoundingFrequencyWeekday, recalculationCompoundingFrequencyOnDay);
-                this.loanInterestRecalculationDetails.updateLoan(this);
-            } else {
-
-                this.loanInterestRecalculationDetails.update(command, actualChanges);
-            }
-        } else {
-            this.loanInterestRecalculationDetails = null;
-        }
-    }*/
+    /*
+     * public void updateLoanInterestRecalculationSettings(final Integer
+     * recalculationRestFrequencyNthDay, final Integer
+     * recalculationRestFrequencyWeekday, final Integer
+     * recalculationRestFrequencyOnDay, final Integer
+     * recalculationCompoundingFrequencyNthDay, final Integer
+     * recalculationCompoundingFrequencyWeekday, final Integer
+     * recalculationCompoundingFrequencyOnDay, final JsonCommand command, final
+     * Map<String, Object> actualChanges) {
+     * 
+     * if (isInterestRecalculationEnabledForProduct()) { Date restFrequencyDate
+     * = null; if (recalculationRestFrequencyDate != null) { restFrequencyDate =
+     * recalculationRestFrequencyDate.toDate(); }
+     * 
+     * Date compoundingFrequencyDate = null; if
+     * (recalculationCompoundingFrequencyDate != null) {
+     * compoundingFrequencyDate =
+     * recalculationCompoundingFrequencyDate.toDate(); } if
+     * (this.loanInterestRecalculationDetails == null) {
+     * actualChanges.put(LoanProductConstants
+     * .isInterestRecalculationEnabledParameterName, true);
+     * this.loanInterestRecalculationDetails =
+     * LoanInterestRecalculationDetails.createFrom(this.loanProduct
+     * .getProductInterestRecalculationDetails
+     * ().getInterestRecalculationCompoundingMethod(), this.loanProduct
+     * .getProductInterestRecalculationDetails().getRescheduleStrategyMethod(),
+     * this.loanProduct
+     * .getProductInterestRecalculationDetails().getRestFrequencyType
+     * ().getValue(), this.loanProduct
+     * .getProductInterestRecalculationDetails().getRestInterval(),
+     * recalculationRestFrequencyNthDay, recalculationRestFrequencyWeekday,
+     * recalculationRestFrequencyOnDay, this.loanProduct
+     * .getProductInterestRecalculationDetails
+     * ().getCompoundingFrequencyType().getValue(), this.loanProduct
+     * .getProductInterestRecalculationDetails().getCompoundingInterval(),
+     * recalculationCompoundingFrequencyNthDay,
+     * recalculationCompoundingFrequencyWeekday,
+     * recalculationCompoundingFrequencyOnDay);
+     * this.loanInterestRecalculationDetails.updateLoan(this); } else {
+     * 
+     * this.loanInterestRecalculationDetails.update(command, actualChanges); } }
+     * else { this.loanInterestRecalculationDetails = null; } }
+     */
 
     private void updateOverdueScheduleInstallment(final LoanCharge loanCharge) {
         if (loanCharge.isOverdueInstallmentCharge() && loanCharge.isActive()) {
@@ -1914,10 +1936,7 @@ public class Loan extends AbstractPersistable<Long> {
     public void loanApplicationSubmittal(final AppUser currentUser, final LoanScheduleModel loanSchedule,
             final LoanApplicationTerms loanApplicationTerms, final LoanLifecycleStateMachine lifecycleStateMachine,
             final LocalDate submittedOn, final String externalId, final boolean allowTransactionsOnHoliday, final List<Holiday> holidays,
-            final WorkingDays workingDays, final boolean allowTransactionsOnNonWorkingDay, 
-            final Integer recalculationRestFrequencyNthDay, final Integer recalculationRestFrequencyWeekday, final Integer recalculationRestFrequencyOnDay, 
-            final Integer recalculationCompoundingFrequencyNthDay, final Integer recalculationCompoundingFrequencyWeekday, 
-            final Integer recalculationCompoundingFrequencyOnDay) {
+            final WorkingDays workingDays, final boolean allowTransactionsOnNonWorkingDay) {
 
         updateLoanSchedule(loanSchedule, currentUser);
 
@@ -1937,14 +1956,6 @@ public class Loan extends AbstractPersistable<Long> {
         this.expectedDisbursementDate = loanApplicationTerms.getExpectedDisbursementDate().toDate();
         this.expectedFirstRepaymentOnDate = loanApplicationTerms.getRepaymentStartFromDate();
         this.interestChargedFromDate = loanApplicationTerms.getInterestChargedFromDate();
-
-        /*if (loanApplicationTerms.getRepaymentPeriodFrequencyType() == PeriodFrequencyType.MONTHS) {
-            this.repaymentFrequencyNthDayType = loanApplicationTerms.getNthDay();
-            this.repaymentFrequencyDayOfWeekType = loanApplicationTerms.getWeekDayType().getValue();
-        } else {
-            this.repaymentFrequencyNthDayType = NthDayType.INVALID.getValue();
-            this.repaymentFrequencyDayOfWeekType = DayOfWeekType.INVALID.getValue();
-        }*/
 
         updateLoanScheduleDependentDerivedFields();
 
@@ -1989,24 +2000,8 @@ public class Loan extends AbstractPersistable<Long> {
          * enabled
          */
         if (this.loanRepaymentScheduleDetail.isInterestRecalculationEnabled()) {
-            /*Date restFrequencyDate = null;
-            if (recalculationRestFrequencyDate != null) {
-                restFrequencyDate = recalculationRestFrequencyDate.toDate();
-            }
-
-            Date compoundingFrequencyDate = null;
-            if (recalculationCompoundingFrequencyDate != null) {
-                compoundingFrequencyDate = recalculationCompoundingFrequencyDate.toDate();
-            }*/
             this.loanInterestRecalculationDetails = LoanInterestRecalculationDetails.createFrom(this.loanProduct
-                    .getProductInterestRecalculationDetails().getInterestRecalculationCompoundingMethod(), this.loanProduct
-                    .getProductInterestRecalculationDetails().getRescheduleStrategyMethod(), this.loanProduct
-                    .getProductInterestRecalculationDetails().getRestFrequencyType().getValue(), this.loanProduct
-                    .getProductInterestRecalculationDetails().getRestInterval(), recalculationRestFrequencyNthDay, 
-                    recalculationRestFrequencyWeekday, recalculationRestFrequencyOnDay, this.loanProduct
-                    .getProductInterestRecalculationDetails().getCompoundingFrequencyType().getValue(), this.loanProduct
-                    .getProductInterestRecalculationDetails().getCompoundingInterval(), recalculationCompoundingFrequencyNthDay,
-                    recalculationCompoundingFrequencyWeekday, recalculationCompoundingFrequencyOnDay);
+                    .getProductInterestRecalculationDetails());
             this.loanInterestRecalculationDetails.updateLoan(this);
         }
 
@@ -5038,9 +5033,9 @@ public class Loan extends AbstractPersistable<Long> {
         }
 
         Calendar loanCalendar = scheduleGeneratorDTO.getLoanCalendar();
-        if(loanCalendar != null) {
-        	nthDayType = CalendarUtils.getRepeatsOnNthDayOfMonth(loanCalendar.getRecurrence());
-        	dayOfWeekType = DayOfWeekType.fromInt(CalendarUtils.getRepeatsOnDay(loanCalendar.getRecurrence()).getValue());
+        if (loanCalendar != null) {
+            nthDayType = CalendarUtils.getRepeatsOnNthDayOfMonth(loanCalendar.getRecurrence());
+            dayOfWeekType = DayOfWeekType.fromInt(CalendarUtils.getRepeatsOnDay(loanCalendar.getRecurrence()).getValue());
         }
         HolidayDetailDTO holidayDetailDTO = scheduleGeneratorDTO.getHolidayDetailDTO();
         CalendarInstance restCalendarInstance = null;
@@ -5070,7 +5065,8 @@ public class Loan extends AbstractPersistable<Long> {
                 this.maxOutstandingLoanBalance, getInterestChargedFromDate(), this.loanProduct.getPrincipalThresholdForLastInstallment(),
                 this.loanProduct.getInstallmentAmountInMultiplesOf(), recalculationFrequencyType, restCalendarInstance, compoundingMethod,
                 compoundingCalendarInstance, compoundingFrequencyType, this.loanProduct.preCloseInterestCalculationStrategy(),
-                rescheduleStrategyMethod, getApprovedPrincipal(), annualNominalInterestRate, loanTermVariations, loanCalendar, holidayDetailDTO);
+                rescheduleStrategyMethod, getApprovedPrincipal(), annualNominalInterestRate, loanTermVariations, loanCalendar,
+                holidayDetailDTO);
         return loanApplicationTerms;
     }
 
@@ -5245,14 +5241,12 @@ public class Loan extends AbstractPersistable<Long> {
         final PeriodFrequencyType loanTermPeriodFrequencyType = this.loanRepaymentScheduleDetail.getInterestPeriodFrequencyType();
         NthDayType nthDayType = null;
         DayOfWeekType dayOfWeekType = null;
-        if(loanCalendar != null) {
-        	nthDayType = CalendarUtils.getRepeatsOnNthDayOfMonth(loanCalendar.getRecurrence());
-        	CalendarWeekDaysType getRepeatsOnDay = CalendarUtils.getRepeatsOnDay(loanCalendar.getRecurrence());
-        	Integer getRepeatsOnDayValue = null;
-        	if (getRepeatsOnDay != null)
-        		getRepeatsOnDayValue = getRepeatsOnDay.getValue();
-        	if (getRepeatsOnDayValue != null)
-        		dayOfWeekType = DayOfWeekType.fromInt(getRepeatsOnDayValue);
+        if (loanCalendar != null) {
+            nthDayType = CalendarUtils.getRepeatsOnNthDayOfMonth(loanCalendar.getRecurrence());
+            CalendarWeekDaysType getRepeatsOnDay = CalendarUtils.getRepeatsOnDay(loanCalendar.getRecurrence());
+            Integer getRepeatsOnDayValue = null;
+            if (getRepeatsOnDay != null) getRepeatsOnDayValue = getRepeatsOnDay.getValue();
+            if (getRepeatsOnDayValue != null) dayOfWeekType = DayOfWeekType.fromInt(getRepeatsOnDayValue);
         }
 
         final Integer numberOfRepayments = this.loanRepaymentScheduleDetail.getNumberOfRepayments();
@@ -5362,21 +5356,21 @@ public class Loan extends AbstractPersistable<Long> {
         return isEnabled;
     }
 
-   /* public Integer getRepaymentFrequencyNthDayType() {
-        return this.repaymentFrequencyNthDayType;
-    }
-
-    public void setRepaymentFrequencyNthDayType(Integer repaymentFrequencyNthDayType) {
-        this.repaymentFrequencyNthDayType = repaymentFrequencyNthDayType;
-    }
-
-    public Integer getRepaymentFrequencyDayOfWeekType() {
-        return this.repaymentFrequencyDayOfWeekType;
-    }
-
-    public void setRepaymentFrequencyDayOfWeekType(Integer repaymentFrequencyDayOfWeekType) {
-        this.repaymentFrequencyDayOfWeekType = repaymentFrequencyDayOfWeekType;
-    }*/
+    /*
+     * public Integer getRepaymentFrequencyNthDayType() { return
+     * this.repaymentFrequencyNthDayType; }
+     * 
+     * public void setRepaymentFrequencyNthDayType(Integer
+     * repaymentFrequencyNthDayType) { this.repaymentFrequencyNthDayType =
+     * repaymentFrequencyNthDayType; }
+     * 
+     * public Integer getRepaymentFrequencyDayOfWeekType() { return
+     * this.repaymentFrequencyDayOfWeekType; }
+     * 
+     * public void setRepaymentFrequencyDayOfWeekType(Integer
+     * repaymentFrequencyDayOfWeekType) { this.repaymentFrequencyDayOfWeekType =
+     * repaymentFrequencyDayOfWeekType; }
+     */
 
     public String getAccountNumber() {
         return this.accountNumber;

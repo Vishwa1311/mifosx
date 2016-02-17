@@ -480,8 +480,9 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         if (paymentDetailsRequired) {
             paymentOptions = this.paymentTypeReadPlatformService.retrieveAllPaymentTypes();
         }
-        return LoanTransactionData.LoanTransactionDataForDisbursalTemplate(transactionType, loan.getExpectedDisbursedOnLocalDateForTemplate(), loan.getDisburseAmountForTemplate(), 
-        		paymentOptions, loan.retriveLastEmiAmount(), loan.getNextPossibleRepaymentDateForRescheduling());
+        return LoanTransactionData.LoanTransactionDataForDisbursalTemplate(transactionType,
+                loan.getExpectedDisbursedOnLocalDateForTemplate(), loan.getDisburseAmountForTemplate(), paymentOptions,
+                loan.retriveLastEmiAmount(), loan.getNextPossibleRepaymentDateForRescheduling());
 
     }
 
@@ -583,15 +584,19 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " l.interest_recalculation_enabled as isInterestRecalculationEnabled, "
                     + " lir.id as lirId, lir.loan_id as loanId, lir.compound_type_enum as compoundType, lir.reschedule_strategy_enum as rescheduleStrategy, "
                     + " lir.rest_frequency_type_enum as restFrequencyEnum, lir.rest_frequency_interval as restFrequencyInterval, "
-                    /*+ " lir.rest_freqency_date as restFrequencyDate, "*/
+                    /* + " lir.rest_freqency_date as restFrequencyDate, " */
                     + " lir.rest_frequency_nth_day_enum as restFrequencyNthDayEnum, "
                     + " lir.rest_frequency_weekday_enum as restFrequencyWeekDayEnum, "
                     + " lir.rest_frequency_on_day as restFrequencyOnDay, "
                     + " lir.compounding_frequency_type_enum as compoundingFrequencyEnum, lir.compounding_frequency_interval as compoundingInterval, "
-                    /*+ " lir.compounding_freqency_date as compoundingFrequencyDate, "*/
+                    /*
+                     * +
+                     * " lir.compounding_freqency_date as compoundingFrequencyDate, "
+                     */
                     + " lir.compounding_frequency_nth_day_enum as compoundingFrequencyNthDayEnum, "
                     + " lir.compounding_frequency_weekday_enum as compoundingFrequencyWeekDayEnum, "
                     + " lir.compounding_frequency_on_day as compoundingFrequencyOnDay, "
+                    + " lir.is_compounding_to_be_posted_as_transaction as isCompoundingToBePostedAsTransaction, "
                     + " l.is_floating_interest_rate as isFloatingInterestRate, "
                     + " l.interest_rate_differential as interestRateDifferential, "
                     + " l.create_standing_instruction_at_disbursement as createStandingInstructionAtDisbursement, "
@@ -740,13 +745,19 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final int repaymentFrequencyTypeInt = JdbcSupport.getInteger(rs, "repaymentFrequencyType");
             final EnumOptionData repaymentFrequencyType = LoanEnumerations.repaymentFrequencyType(repaymentFrequencyTypeInt);
 
-            /*final Integer repaymentFrequencyNthDayTypeInt = JdbcSupport.getInteger(rs, "repaymentFrequencyNthDayType");
-            final EnumOptionData repaymentFrequencyNthDayType = LoanEnumerations
-                    .repaymentFrequencyNthDayType(repaymentFrequencyNthDayTypeInt);
-
-            final Integer repaymentFrequencyDayOfWeekTypeInt = JdbcSupport.getInteger(rs, "repaymentFrequencyDayOfWeekType");
-            final EnumOptionData repaymentFrequencyDayOfWeekType = LoanEnumerations
-                    .repaymentFrequencyDayOfWeekType(repaymentFrequencyDayOfWeekTypeInt);*/
+            /*
+             * final Integer repaymentFrequencyNthDayTypeInt =
+             * JdbcSupport.getInteger(rs, "repaymentFrequencyNthDayType"); final
+             * EnumOptionData repaymentFrequencyNthDayType = LoanEnumerations
+             * .repaymentFrequencyNthDayType(repaymentFrequencyNthDayTypeInt);
+             * 
+             * final Integer repaymentFrequencyDayOfWeekTypeInt =
+             * JdbcSupport.getInteger(rs, "repaymentFrequencyDayOfWeekType");
+             * final EnumOptionData repaymentFrequencyDayOfWeekType =
+             * LoanEnumerations
+             * .repaymentFrequencyDayOfWeekType(repaymentFrequencyDayOfWeekTypeInt
+             * );
+             */
 
             final int interestRateFrequencyTypeInt = JdbcSupport.getInteger(rs, "interestRateFrequencyType");
             final EnumOptionData interestRateFrequencyType = LoanEnumerations.interestRateFrequencyType(interestRateFrequencyTypeInt);
@@ -865,16 +876,20 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 final int restFrequencyEnumValue = JdbcSupport.getInteger(rs, "restFrequencyEnum");
                 final EnumOptionData restFrequencyType = LoanEnumerations.interestRecalculationFrequencyType(restFrequencyEnumValue);
                 final int restFrequencyInterval = JdbcSupport.getInteger(rs, "restFrequencyInterval");
-                /*final LocalDate restFrequencyDate = JdbcSupport.getLocalDate(rs, "restFrequencyDate");*/
+                /*
+                 * final LocalDate restFrequencyDate =
+                 * JdbcSupport.getLocalDate(rs, "restFrequencyDate");
+                 */
                 final Integer restFrequencyNthDayEnumValue = JdbcSupport.getInteger(rs, "restFrequencyNthDayEnum");
                 EnumOptionData restFrequencyNthDayEnum = null;
-                if(restFrequencyNthDayEnumValue != null) {
-                	restFrequencyNthDayEnum = LoanEnumerations.interestRecalculationCompoundingNthDayType(restFrequencyNthDayEnumValue);
+                if (restFrequencyNthDayEnumValue != null) {
+                    restFrequencyNthDayEnum = LoanEnumerations.interestRecalculationCompoundingNthDayType(restFrequencyNthDayEnumValue);
                 }
                 final Integer restFrequencyWeekDayEnumValue = JdbcSupport.getInteger(rs, "restFrequencyWeekDayEnum");
                 EnumOptionData restFrequencyWeekDayEnum = null;
-                if(restFrequencyWeekDayEnumValue != null) {
-                	restFrequencyWeekDayEnum = LoanEnumerations.interestRecalculationCompoundingDayOfWeekType(restFrequencyWeekDayEnumValue);
+                if (restFrequencyWeekDayEnumValue != null) {
+                    restFrequencyWeekDayEnum = LoanEnumerations
+                            .interestRecalculationCompoundingDayOfWeekType(restFrequencyWeekDayEnumValue);
                 }
                 final Integer restFrequencyOnDay = JdbcSupport.getInteger(rs, "restFrequencyOnDay");
                 final CalendarData compoundingCalendarData = null;
@@ -884,40 +899,46 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     compoundingFrequencyType = LoanEnumerations.interestRecalculationFrequencyType(compoundingFrequencyEnumValue);
                 }
                 final Integer compoundingInterval = JdbcSupport.getInteger(rs, "compoundingInterval");
-                /*final LocalDate compoundingFrequencyDate = JdbcSupport.getLocalDate(rs, "compoundingFrequencyDate");*/
+                /*
+                 * final LocalDate compoundingFrequencyDate =
+                 * JdbcSupport.getLocalDate(rs, "compoundingFrequencyDate");
+                 */
                 final Integer compoundingFrequencyNthDayEnumValue = JdbcSupport.getInteger(rs, "compoundingFrequencyNthDayEnum");
                 EnumOptionData compoundingFrequencyNthDayEnum = null;
-                if(compoundingFrequencyNthDayEnumValue != null) {
-                	compoundingFrequencyNthDayEnum = LoanEnumerations.interestRecalculationCompoundingNthDayType(compoundingFrequencyNthDayEnumValue);
+                if (compoundingFrequencyNthDayEnumValue != null) {
+                    compoundingFrequencyNthDayEnum = LoanEnumerations
+                            .interestRecalculationCompoundingNthDayType(compoundingFrequencyNthDayEnumValue);
                 }
                 final Integer compoundingFrequencyWeekDayEnumValue = JdbcSupport.getInteger(rs, "compoundingFrequencyWeekDayEnum");
                 EnumOptionData compoundingFrequencyWeekDayEnum = null;
-                if(compoundingFrequencyWeekDayEnumValue != null) {
-                	compoundingFrequencyWeekDayEnum = LoanEnumerations.interestRecalculationCompoundingDayOfWeekType(compoundingFrequencyWeekDayEnumValue);
+                if (compoundingFrequencyWeekDayEnumValue != null) {
+                    compoundingFrequencyWeekDayEnum = LoanEnumerations
+                            .interestRecalculationCompoundingDayOfWeekType(compoundingFrequencyWeekDayEnumValue);
                 }
                 final Integer compoundingFrequencyOnDay = JdbcSupport.getInteger(rs, "compoundingFrequencyOnDay");
 
+                final Boolean isCompoundingToBePostedAsTransaction = rs.getBoolean("isCompoundingToBePostedAsTransaction");
+
                 interestRecalculationData = new LoanInterestRecalculationData(lprId, productId, interestRecalculationCompoundingType,
                         rescheduleStrategyType, calendarData, restFrequencyType, restFrequencyInterval, restFrequencyNthDayEnum,
-                        restFrequencyWeekDayEnum, restFrequencyOnDay,
-                        compoundingCalendarData, compoundingFrequencyType, compoundingInterval, compoundingFrequencyNthDayEnum,
-                        compoundingFrequencyWeekDayEnum, compoundingFrequencyOnDay);
+                        restFrequencyWeekDayEnum, restFrequencyOnDay, compoundingCalendarData, compoundingFrequencyType,
+                        compoundingInterval, compoundingFrequencyNthDayEnum, compoundingFrequencyWeekDayEnum, compoundingFrequencyOnDay,
+                        isCompoundingToBePostedAsTransaction);
             }
 
             return LoanAccountData.basicLoanDetails(id, accountNo, status, externalId, clientId, clientAccountNo, clientName,
                     clientOfficeId, groupData, loanType, loanProductId, loanProductName, loanProductDescription,
                     isLoanProductLinkedToFloatingRate, fundId, fundName, loanPurposeId, loanPurposeName, loanOfficerId, loanOfficerName,
                     currencyData, proposedPrincipal, principal, approvedPrincipal, totalOverpaid, inArrearsTolerance, termFrequency,
-                    termPeriodFrequencyType, numberOfRepayments, repaymentEvery, repaymentFrequencyType, null,
-                    null, transactionStrategyId, transactionStrategyName, amortizationType,
-                    interestRatePerPeriod, interestRateFrequencyType, annualInterestRate, interestType, isFloatingInterestRate,
-                    interestRateDifferential, interestCalculationPeriodType, allowPartialPeriodInterestCalcualtion,
-                    expectedFirstRepaymentOnDate, graceOnPrincipalPayment, graceOnInterestPayment, graceOnInterestCharged,
-                    interestChargedFromDate, timeline, loanSummary, feeChargesDueAtDisbursementCharged, syncDisbursementWithMeeting,
-                    loanCounter, loanProductCounter, multiDisburseLoan, canDefineInstallmentAmount, fixedEmiAmount, outstandingLoanBalance,
-                    inArrears, graceOnArrearsAgeing, isNPA, daysInMonthType, daysInYearType, isInterestRecalculationEnabled,
-                    interestRecalculationData, createStandingInstructionAtDisbursement, isvariableInstallmentsAllowed, minimumGap,
-                    maximumGap);
+                    termPeriodFrequencyType, numberOfRepayments, repaymentEvery, repaymentFrequencyType, null, null, transactionStrategyId,
+                    transactionStrategyName, amortizationType, interestRatePerPeriod, interestRateFrequencyType, annualInterestRate,
+                    interestType, isFloatingInterestRate, interestRateDifferential, interestCalculationPeriodType,
+                    allowPartialPeriodInterestCalcualtion, expectedFirstRepaymentOnDate, graceOnPrincipalPayment, graceOnInterestPayment,
+                    graceOnInterestCharged, interestChargedFromDate, timeline, loanSummary, feeChargesDueAtDisbursementCharged,
+                    syncDisbursementWithMeeting, loanCounter, loanProductCounter, multiDisburseLoan, canDefineInstallmentAmount,
+                    fixedEmiAmount, outstandingLoanBalance, inArrears, graceOnArrearsAgeing, isNPA, daysInMonthType, daysInYearType,
+                    isInterestRecalculationEnabled, interestRecalculationData, createStandingInstructionAtDisbursement,
+                    isvariableInstallmentsAllowed, minimumGap, maximumGap);
         }
     }
 

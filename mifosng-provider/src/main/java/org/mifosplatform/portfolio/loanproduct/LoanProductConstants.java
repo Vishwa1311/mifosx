@@ -83,6 +83,7 @@ public interface LoanProductConstants {
     public static final String recalculationCompoundingFrequencyWeekdayParamName = "recalculationCompoundingFrequencyDayOfWeekType";
     public static final String recalculationCompoundingFrequencyNthDayParamName = "recalculationCompoundingFrequencyNthDayType";
     public static final String recalculationCompoundingFrequencyOnDayParamName = "recalculationCompoundingFrequencyOnDayType";
+    public static final String isCompoundingToBePostedAsTransactionParamName = "isCompoundingToBePostedAsTransaction";
 
     // Guarantee related
     public static final String holdGuaranteeFundsParamName = "holdGuaranteeFunds";
