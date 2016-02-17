@@ -381,9 +381,6 @@ public class Loan extends AbstractPersistable<Long> {
     @Column(name = "interest_rate_differential", scale = 6, precision = 19, nullable = true)
     private BigDecimal interestRateDifferential;
 
-    @Column(name = "is_income_posted_as_transactions")
-	private Boolean isIncomePostedAsTransactions;
-
     public static Loan newIndividualLoanApplication(final String accountNo, final Client client, final Integer loanType,
             final LoanProduct loanProduct, final Fund fund, final Staff officer, final CodeValue loanPurpose,
             final LoanTransactionProcessingStrategy transactionProcessingStrategy,
@@ -498,7 +495,6 @@ public class Loan extends AbstractPersistable<Long> {
          */
 
         this.proposedPrincipal = this.loanRepaymentScheduleDetail.getPrincipal().getAmount();
-        this.isIncomePostedAsTransactions = false;
 
     }
 
@@ -5090,7 +5086,7 @@ public class Loan extends AbstractPersistable<Long> {
 	}
 
 	public void processIncomeTransactions(AppUser currentUser) {
-		if(this.isIncomePostedAsTransactions){
+		if(this.loanInterestRecalculationDetails.isCompoundingToBePostedAsTransaction()){
 			LocalDate lastCompoundingDate = this.getDisbursementDate();
 			List<LoanInterestRecalcualtionAdditionalDetails> compoundingDetails = extractInterestRecalculationAdditionalDetails();
 			List<LoanTransaction> incomeTransactions = retreiveListOfIncomePostingTransactions();
@@ -5377,7 +5373,7 @@ public class Loan extends AbstractPersistable<Long> {
                 outstanding = outstanding.plus(loanTransaction.getAmount(getCurrency()));
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             } else {
-            	if(this.isIncomePostedAsTransactions){
+            	if(this.loanInterestRecalculationDetails.isCompoundingToBePostedAsTransaction()){
                     outstanding = outstanding.minus(loanTransaction.getAmount(getCurrency()));
             	}else{
                     outstanding = outstanding.minus(loanTransaction.getPrincipalPortion(getCurrency()));

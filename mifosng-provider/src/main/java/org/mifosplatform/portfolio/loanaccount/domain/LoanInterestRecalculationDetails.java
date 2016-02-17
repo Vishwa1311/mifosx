@@ -179,4 +179,9 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
     public Integer getCompoundingFrequencyOnDay() {
         return this.compoundingFrequencyOnDay;
     }
+    
+    public boolean isCompoundingToBePostedAsTransaction(){
+    	return null == this.isCompoundingToBePostedAsTransaction? false 
+    			: this.isCompoundingToBePostedAsTransaction;
+    }
 }
