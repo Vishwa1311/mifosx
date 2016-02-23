@@ -379,7 +379,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                     for (Map.Entry<LocalDate, Money> entry : periodCompoundingDetails.entrySet()) {
                         if (entry.getValue().isGreaterThanZero() && !entry.getKey().isAfter(loanScheduleModelPeriod.periodDueDate())) {
                             LoanInterestRecalcualtionAdditionalDetails additionalDetails = new LoanInterestRecalcualtionAdditionalDetails(
-                                    entry.getKey(), entry.getValue().getAmount());
+                                    entry.getKey().minusDays(1), entry.getValue().getAmount());
                             loanScheduleModelPeriod.getLoanCompoundingDetails().add(additionalDetails);
                         }
                     }
@@ -2407,10 +2407,9 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
         Money totalCompounded = Money.zero(currency);
         Map<LocalDate, Money> compoundingMap = new TreeMap<>();
         for (LoanInterestRecalcualtionAdditionalDetails additionalDetails : details) {
-            compoundingMap.put(additionalDetails.getEffectiveDate(), Money.of(currency, additionalDetails.getAmount()));
+            compoundingMap.put(additionalDetails.getEffectiveDate().plusDays(1), Money.of(currency, additionalDetails.getAmount()));
             totalCompounded = totalCompounded.plus(additionalDetails.getAmount());
-            updateMapWithAmount(principalMap, Money.of(currency, additionalDetails.getAmount()).negated(),
-                    additionalDetails.getEffectiveDate());
+            updateMapWithAmount(principalMap, Money.of(currency, additionalDetails.getAmount()).negated(), additionalDetails.getEffectiveDate().plusDays(1));
         }
         compoundingDateVariations.put(installment.getFromDate(), compoundingMap);
         if (totalCompounded.isGreaterThanZero()) {
@@ -2542,7 +2541,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                     loanApplicationTerms, holidayDetailDTO);
         } else {
             CalendarInstance calendarInstance = loanApplicationTerms.getCompoundingCalendarInstance();
-            nextScheduleDate = CalendarUtils.getNextScheduleDate(calendarInstance.getCalendar(), startDate);
+            nextScheduleDate = CalendarUtils.getNextScheduleDate(calendarInstance.getCalendar(), startDate).plusDays(1);
         }
 
         return nextScheduleDate;
