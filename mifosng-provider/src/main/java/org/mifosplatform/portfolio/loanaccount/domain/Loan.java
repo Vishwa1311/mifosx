@@ -2369,8 +2369,13 @@ public class Loan extends AbstractPersistable<Long> {
             this.loanTermVariations.add(loanVariationTerms);
         }
 
+        
         if (isRepaymentScheduleRegenerationRequiredForDisbursement(actualDisbursementDate) || recalculateSchedule || isEmiAmountChanged) {
+        	 if (this.repaymentScheduleDetail().isInterestRecalculationEnabled()) {
+                 regenerateRepaymentScheduleWithInterestRecalculation(scheduleGeneratorDTO, currentUser);
+             }else{
             regenerateRepaymentSchedule(scheduleGeneratorDTO, currentUser);
+             }
         }
     }
 
