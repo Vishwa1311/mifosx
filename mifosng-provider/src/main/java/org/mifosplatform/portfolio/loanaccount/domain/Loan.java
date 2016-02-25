@@ -5392,7 +5392,8 @@ public class Loan extends AbstractPersistable<Long> {
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             } else {
                 if (this.loanInterestRecalculationDetails!=null 
-                        && this.loanInterestRecalculationDetails.isCompoundingToBePostedAsTransaction()) {
+                        && this.loanInterestRecalculationDetails.isCompoundingToBePostedAsTransaction()
+                        && !loanTransaction.isRepaymentAtDisbursement()) {
                     outstanding = outstanding.minus(loanTransaction.getAmount(getCurrency()));
                 } else {
                     outstanding = outstanding.minus(loanTransaction.getPrincipalPortion(getCurrency()));
