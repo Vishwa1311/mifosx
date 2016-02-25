@@ -419,6 +419,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
     		final Integer repeatsOnDay, final RecalculationFrequencyType recalculationFrequencyType, Integer frequency, 
     		CalendarEntityType calendarEntityType, final String title) {
         CalendarFrequencyType calendarFrequencyType = CalendarFrequencyType.INVALID;
+        Integer updatedRepeatsOnDay = repeatsOnDay;
         switch (recalculationFrequencyType) {
             case DAILY:
                 calendarFrequencyType = CalendarFrequencyType.DAILY;
@@ -430,6 +431,9 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 frequency = loan.repaymentScheduleDetail().getRepayEvery();
                 calendarFrequencyType = CalendarFrequencyType.from(loan.repaymentScheduleDetail().getRepaymentPeriodFrequencyType());
                 calendarStartDate = loan.getExpectedDisbursedOnLocalDate();
+                if(updatedRepeatsOnDay == null){
+                    updatedRepeatsOnDay = calendarStartDate.getDayOfWeek();
+                }
             break;
             case WEEKLY:
                 calendarFrequencyType = CalendarFrequencyType.WEEKLY;
@@ -439,7 +443,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         }
 
         final Calendar calendar = Calendar.createRepeatingCalendar(title, calendarStartDate, CalendarType.COLLECTION.getValue(),
-                calendarFrequencyType, frequency, repeatsOnDay, recalculationFrequencyNthDay);
+                calendarFrequencyType, frequency, updatedRepeatsOnDay, recalculationFrequencyNthDay);
         final CalendarInstance calendarInstance = CalendarInstance.from(calendar, loan.loanInterestRecalculationDetails().getId(),
                 calendarEntityType.getValue());
         this.calendarInstanceRepository.save(calendarInstance);

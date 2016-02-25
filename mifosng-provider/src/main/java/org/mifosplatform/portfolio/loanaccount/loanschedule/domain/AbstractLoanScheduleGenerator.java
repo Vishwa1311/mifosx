@@ -189,10 +189,6 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
 
             if (scheduleParams.getPeriodStartDate().isAfter(scheduledDueDate)) { throw new ScheduleDateException(
                     "Due date can't be before period start date", scheduledDueDate); }
-            if (loanApplicationTerms.isInterestRecalculationEnabled()) {
-                populateCompoundingDatesInPeriod(scheduleParams.getPeriodStartDate(), scheduledDueDate, loanApplicationTerms,
-                        holidayDetailDTO, scheduleParams, loanCharges, currency);
-            }
 
             if (extendTermForDailyRepayments) {
                 scheduleParams.setActualRepaymentDate(scheduledDueDate);
@@ -203,6 +199,11 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
             if (scheduleParams.getScheduleTillDate() != null && !scheduledDueDate.isBefore(scheduleParams.getScheduleTillDate())) {
                 scheduledDueDate = scheduleParams.getScheduleTillDate();
                 isNextRepaymentAvailable = false;
+            }
+            
+            if (loanApplicationTerms.isInterestRecalculationEnabled()) {
+                populateCompoundingDatesInPeriod(scheduleParams.getPeriodStartDate(), scheduledDueDate, loanApplicationTerms,
+                        holidayDetailDTO, scheduleParams, loanCharges, currency);
             }
 
             // populates the collection with transactions till the due date of
@@ -376,7 +377,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                 Map<LocalDate, Money> periodCompoundingDetails = compoundingDetails.get(loanScheduleModelPeriod.periodFromDate());
                 if (periodCompoundingDetails != null) {
                     for (Map.Entry<LocalDate, Money> entry : periodCompoundingDetails.entrySet()) {
-                        if (entry.getValue().isGreaterThanZero()) {
+                        if (entry.getValue().isGreaterThanZero() && !entry.getKey().isAfter(loanScheduleModelPeriod.periodDueDate())) {
                             LoanInterestRecalcualtionAdditionalDetails additionalDetails = new LoanInterestRecalcualtionAdditionalDetails(
                                     entry.getKey(), entry.getValue().getAmount());
                             loanScheduleModelPeriod.getLoanCompoundingDetails().add(additionalDetails);
@@ -1173,6 +1174,8 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                     totalInterest.zero(), totalInterest.zero(), totalInterest, true);
             params.incrementInstalmentNumber();
             periods.add(installment);
+            params.getCompoundingDateVariations().put(startDate, new TreeMap<>(params.getCompoundingMap()));
+
             totalCumulativeInterest = totalCumulativeInterest.plus(totalInterest);
         }
         return totalCumulativeInterest;
@@ -2347,7 +2350,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
             final Map<LocalDate, Money> principalPortionMap, LoanRepaymentScheduleInstallment installment,
             Collection<RecalculationDetail> applicableTransactions, Money actualPrincipalPortion) {
         Money unprocessed = Money.zero(currency);
-        Money totalUnprocessed =  Money.zero(currency);
+        Money totalUnprocessed = Money.zero(currency);
         for (RecalculationDetail detail : applicableTransactions) {
             if (!detail.isProcessed()) {
                 Money principalProcessed = installment.getPrincipalCompleted(currency);
@@ -2406,7 +2409,8 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
         for (LoanInterestRecalcualtionAdditionalDetails additionalDetails : details) {
             compoundingMap.put(additionalDetails.getEffectiveDate(), Money.of(currency, additionalDetails.getAmount()));
             totalCompounded = totalCompounded.plus(additionalDetails.getAmount());
-            updateMapWithAmount(principalMap, Money.of(currency, additionalDetails.getAmount()).negated(), additionalDetails.getEffectiveDate());
+            updateMapWithAmount(principalMap, Money.of(currency, additionalDetails.getAmount()).negated(),
+                    additionalDetails.getEffectiveDate());
         }
         compoundingDateVariations.put(installment.getFromDate(), compoundingMap);
         if (totalCompounded.isGreaterThanZero()) {

@@ -1601,10 +1601,11 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         sqlBuilder
                 .append("select ")
                 .append(mapper.schema())
-                .append(" where ((ls.fee_charges_amount <> if(ls.accrual_fee_charges_derived is null,0, ls.accrual_fee_charges_derived))")
+                .append(" where (recaldet.is_compounding_to_be_posted_as_transaction is null or recaldet.is_compounding_to_be_posted_as_transaction = 0) ")
+                .append(" and (((ls.fee_charges_amount <> if(ls.accrual_fee_charges_derived is null,0, ls.accrual_fee_charges_derived))")
                 .append(" or ( ls.penalty_charges_amount <> if(ls.accrual_penalty_charges_derived is null,0,ls.accrual_penalty_charges_derived))")
                 .append(" or ( ls.interest_amount <> if(ls.accrual_interest_derived is null,0,ls.accrual_interest_derived)))")
-                .append("  and loan.loan_status_id=? and mpl.accounting_type=? and loan.is_npa=0 and ls.duedate <= CURDATE() order by loan.id,ls.duedate");
+                .append("  and loan.loan_status_id=? and mpl.accounting_type=? and loan.is_npa=0 and ls.duedate <= CURDATE()) order by loan.id,ls.duedate");
         return this.jdbcTemplate.query(sqlBuilder.toString(), mapper, new Object[] { LoanStatus.ACTIVE.getValue(),
                 AccountingRuleType.ACCRUAL_PERIODIC.getValue() });
     }
@@ -1617,10 +1618,11 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         sqlBuilder
                 .append("select ")
                 .append(mapper.schema())
-                .append(" where ((ls.fee_charges_amount <> if(ls.accrual_fee_charges_derived is null,0, ls.accrual_fee_charges_derived))")
+                .append(" where  (recaldet.is_compounding_to_be_posted_as_transaction is null or recaldet.is_compounding_to_be_posted_as_transaction = 0) ")
+                .append(" and (((ls.fee_charges_amount <> if(ls.accrual_fee_charges_derived is null,0, ls.accrual_fee_charges_derived))")
                 .append(" or (ls.penalty_charges_amount <> if(ls.accrual_penalty_charges_derived is null,0,ls.accrual_penalty_charges_derived))")
                 .append(" or (ls.interest_amount <> if(ls.accrual_interest_derived is null,0,ls.accrual_interest_derived)))")
-                .append("  and loan.loan_status_id=:active and mpl.accounting_type=:type and loan.is_npa=0 and (ls.duedate <= :tilldate or (ls.duedate > :tilldate and ls.fromdate < :tilldate)) order by loan.id,ls.duedate");
+                .append("  and loan.loan_status_id=:active and mpl.accounting_type=:type and loan.is_npa=0 and (ls.duedate <= :tilldate or (ls.duedate > :tilldate and ls.fromdate < :tilldate))) order by loan.id,ls.duedate");
         Map<String, Object> paramMap = new HashMap<>(3);
         paramMap.put("active", LoanStatus.ACTIVE.getValue());
         paramMap.put("type", AccountingRuleType.ACCRUAL_PERIODIC.getValue());
@@ -1649,7 +1651,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     .append(" from m_loan_repayment_schedule ls ").append(" left join m_loan loan on loan.id=ls.loan_id ")
                     .append(" left join m_product_loan mpl on mpl.id = loan.product_id")
                     .append(" left join m_client mc on mc.id = loan.client_id ").append(" left join m_group mg on mg.id = loan.group_id")
-                    .append(" left join m_currency curr on curr.code = loan.currency_code");
+                    .append(" left join m_currency curr on curr.code = loan.currency_code")
+                    .append(" left join m_loan_recalculation_details as recaldet on loan.id = recaldet.loan_id ");
             return sqlBuilder.toString();
         }
 
@@ -1710,7 +1713,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     .append(" from m_loan_repayment_schedule ls ").append(" left join m_loan loan on loan.id=ls.loan_id ")
                     .append(" left join m_product_loan mpl on mpl.id = loan.product_id")
                     .append(" left join m_client mc on mc.id = loan.client_id ").append(" left join m_group mg on mg.id = loan.group_id")
-                    .append(" left join m_currency curr on curr.code = loan.currency_code");
+                    .append(" left join m_currency curr on curr.code = loan.currency_code")
+                    .append(" left join m_loan_recalculation_details as recaldet on loan.id = recaldet.loan_id ");
             return sqlBuilder.toString();
         }
 
@@ -2048,6 +2052,27 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
         if (rate.getFromDate().compareTo(loan.getDisbursementDate().toDate()) < 0) {
             rate.setFromDate(loan.getDisbursementDate().toDate());
+        }
+    }
+
+    @Override
+    public Collection<Long> retrieveLoanIdsWithPendingIncomePostingTransactions() {
+        StringBuilder sqlBuilder = new StringBuilder()
+            .append(" select distinct loan.id ")
+            .append(" from m_loan as loan ")
+            .append(" inner join m_loan_recalculation_details as recdet on (recdet.loan_id = loan.id and recdet.is_compounding_to_be_posted_as_transaction is not null and recdet.is_compounding_to_be_posted_as_transaction = 1) ")
+            .append(" inner join m_loan_repayment_schedule as repsch on repsch.loan_id = loan.id ")
+            .append(" inner join m_loan_interest_recalculation_additional_details as adddet on adddet.loan_repayment_schedule_id = repsch.id ")
+            .append(" left join m_loan_transaction as trans on (trans.is_reversed <> 1 and trans.transaction_type_enum = 19 and trans.loan_id = loan.id and trans.transaction_date = adddet.effective_date) ")
+            .append(" where loan.loan_status_id = 300 ")
+            .append(" adddet.effective_date is not null ")
+            .append(" and trans.transaction_date is null ")
+            .append(" and adddet.effective_date < ? ");
+        try {
+            String currentdate = formatter.print(DateUtils.getLocalDateOfTenant());
+            return this.jdbcTemplate.queryForList(sqlBuilder.toString(), Long.class, new Object[] { currentdate });
+        } catch (final EmptyResultDataAccessException e) {
+            return null;
         }
     }
 

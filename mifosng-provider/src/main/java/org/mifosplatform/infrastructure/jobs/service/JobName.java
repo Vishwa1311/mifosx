@@ -25,7 +25,8 @@ public enum JobName {
     ADD_PERIODIC_ACCRUAL_ENTRIES("Add Periodic Accrual Transactions"),
     RECALCULATE_INTEREST_FOR_LOAN("Recalculate Interest For Loans"),
     GENERATE_RD_SCEHDULE("Generate Mandatory Savings Schedule"),
-    GENERATE_LOANLOSS_PROVISIONING("Generate Loan Loss Provisioning");
+    GENERATE_LOANLOSS_PROVISIONING("Generate Loan Loss Provisioning"), 
+    ADD_PERIODIC_ACCRUAL_ENTRIES_FOR_LOANS_WITH_INCOME_POSTED_AS_TRANSACTIONS("Add Accrual Transactions For Loans With Income Posted As Transactions");
     
     private final String name;
 
