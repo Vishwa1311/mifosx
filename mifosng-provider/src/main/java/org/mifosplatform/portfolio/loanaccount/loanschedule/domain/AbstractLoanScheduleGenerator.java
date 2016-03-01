@@ -773,7 +773,6 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                                     currentTransactions, currency, scheduleParams.getInstallments());
                             Money arrears = fetchArrears(loanApplicationTerms, currency, detail.getTransaction());
                             if (unprocessed.isGreaterThanZero()) {
-                                arrears = getTotalAmount(scheduleParams.getLatePaymentMap(), currency);
                                 updateMapWithAmount(scheduleParams.getPrincipalPortionMap(), unprocessed, applicableDate);
                                 currentPeriodParams.plusEarlyPaidAmount(unprocessed);
 
