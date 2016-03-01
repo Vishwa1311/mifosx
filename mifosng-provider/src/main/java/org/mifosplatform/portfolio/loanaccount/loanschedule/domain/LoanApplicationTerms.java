@@ -744,13 +744,13 @@ public final class LoanApplicationTerms {
                         startDateAfterConsideringMonths = expectedStartDate;
                     } else {
                         startDateAfterConsideringMonths = CalendarUtils.getNewRepaymentMeetingDate(loanCalendar.getRecurrence(),
-                                loanCalendar.getStartDateLocalDate().minusMonths(getRepaymentEvery()),
+                                expectedStartDate,
                                 expectedStartDate.plusMonths(numberOfMonths), getRepaymentEvery(),
                                 CalendarUtils.getMeetingFrequencyFromPeriodFrequencyType(getLoanTermPeriodFrequencyType()),
                                 this.holidayDetailDTO.getWorkingDays());
                     }
                     endDateAfterConsideringMonths = CalendarUtils.getNewRepaymentMeetingDate(loanCalendar.getRecurrence(),
-                            loanCalendar.getStartDateLocalDate(), startDateAfterConsideringMonths.plusDays(1), getRepaymentEvery(),
+                            startDateAfterConsideringMonths, startDateAfterConsideringMonths.plusDays(1), getRepaymentEvery(),
                             CalendarUtils.getMeetingFrequencyFromPeriodFrequencyType(getLoanTermPeriodFrequencyType()),
                             this.holidayDetailDTO.getWorkingDays());
                 }

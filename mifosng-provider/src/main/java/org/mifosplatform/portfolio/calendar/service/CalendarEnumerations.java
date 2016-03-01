@@ -75,8 +75,11 @@ public class CalendarEnumerations {
     }
 
     public static EnumOptionData calendarFrequencyType(final CalendarFrequencyType calendarFrequencyType) {
-        final EnumOptionData optionData = new EnumOptionData(calendarFrequencyType.getValue().longValue(), calendarFrequencyType.getCode(),
-                calendarFrequencyType.toString());
+        EnumOptionData optionData = null;
+        if (!calendarFrequencyType.isInvalid()) {
+            optionData = new EnumOptionData(calendarFrequencyType.getValue().longValue(), calendarFrequencyType.getCode(),
+                    calendarFrequencyType.toString());
+        }
         return optionData;
     }
 
@@ -95,8 +98,11 @@ public class CalendarEnumerations {
     }
 
     public static EnumOptionData calendarWeekDaysType(final CalendarWeekDaysType calendarWeekDaysType) {
-        final EnumOptionData optionData = new EnumOptionData(calendarWeekDaysType.getValue().longValue(), calendarWeekDaysType.getCode(),
-                calendarWeekDaysType.toString());
+        EnumOptionData optionData = null;
+        if (!calendarWeekDaysType.isInvalid()) {
+            optionData = new EnumOptionData(calendarWeekDaysType.getValue().longValue(), calendarWeekDaysType.getCode(),
+                    calendarWeekDaysType.toString());
+        }
         return optionData;
     }
 

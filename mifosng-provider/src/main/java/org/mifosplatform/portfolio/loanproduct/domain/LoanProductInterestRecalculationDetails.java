@@ -301,6 +301,22 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
                 this.restFrequencyNthDay = null;
                 this.restFrequencyWeekday = null;
             }
+            
+            if (frequencyType.isWeekly()) {
+            	this.restFrequencyNthDay = null;
+            	this.restFrequencyOnDay = null;
+            } else if (frequencyType.isMonthly()) {
+            	if(command.integerValueOfParameterNamed(LoanProductConstants.recalculationRestFrequencyOnDayParamName) != null) {
+            		this.restFrequencyNthDay = null;
+            		this.restFrequencyWeekday = null;
+            	} else {
+            		this.restFrequencyOnDay = null;
+            	}
+            } else if (frequencyType.isDaily()) {
+            	this.restFrequencyNthDay = null;
+        		this.restFrequencyWeekday = null;
+        		this.restFrequencyOnDay = null;
+            }
         }
 
         if (command.isChangeInIntegerParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyTypeParameterName,
@@ -372,11 +388,30 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
                     this.compoundingFrequencyNthDay = null;
                     this.compoundingFrequencyWeekday = null;
                 }
+                
+                if (compoundingfrequencyType.isWeekly()) {
+                	this.compoundingFrequencyNthDay = null;
+                	this.compoundingFrequencyOnDay = null;
+                } else if (compoundingfrequencyType.isMonthly()) {
+                	if(command.integerValueOfParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyOnDayParamName) != null) {
+                		this.compoundingFrequencyNthDay = null;
+                		this.compoundingFrequencyWeekday = null;
+                	} else {
+                		this.compoundingFrequencyOnDay = null;
+                	}
+                } else if (compoundingfrequencyType.isDaily()) {
+                	this.compoundingFrequencyNthDay = null;
+            		this.compoundingFrequencyWeekday = null;
+            		this.compoundingFrequencyOnDay = null;
+                }
             }
         } else {
             this.compoundingFrequencyType = null;
             this.compoundingInterval = null;
             // this.compoundingFrequencyDate = null;
+            this.compoundingFrequencyNthDay = null;
+    		this.compoundingFrequencyWeekday = null;
+    		this.compoundingFrequencyOnDay = null;
         }
 
         if (command.isChangeInBooleanParameterNamed(LoanProductConstants.isArrearsBasedOnOriginalScheduleParamName,

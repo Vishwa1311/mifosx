@@ -24,6 +24,9 @@ import org.mifosplatform.infrastructure.core.exception.PlatformApiDataValidation
 import org.mifosplatform.infrastructure.core.exception.UnsupportedParameterException;
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.portfolio.accountdetails.domain.AccountType;
+import org.mifosplatform.portfolio.calendar.service.CalendarUtils;
+import org.mifosplatform.portfolio.calendar.service.CalendarUtils.NthDayNameEnum;
+import org.mifosplatform.portfolio.common.domain.NthDayType;
 import org.mifosplatform.portfolio.loanaccount.api.LoanApiConstants;
 import org.mifosplatform.portfolio.loanaccount.domain.Loan;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanCharge;
@@ -193,6 +196,11 @@ public final class LoanApplicationCommandFromApiJsonHelper {
         baseDataValidator.reset().parameter(repaymentEveryFrequencyTypeParameterName).value(repaymentEveryType).notNull()
                 .inMinMaxRange(0, 3);
 
+        final String repaymentFrequencyNthDayTypeParameterName = "repaymentFrequencyNthDayType";
+        final String repaymentFrequencyDayOfWeekTypeParameterName = "repaymentFrequencyDayOfWeekType";
+        CalendarUtils.validateNthDayOfMonthFrequency(baseDataValidator, repaymentFrequencyNthDayTypeParameterName,
+                repaymentFrequencyDayOfWeekTypeParameterName, element, this.fromApiJsonHelper);
+        
         final String interestTypeParameterName = "interestType";
         final Integer interestType = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(interestTypeParameterName, element);
         baseDataValidator.reset().parameter(interestTypeParameterName).value(interestType).notNull().inMinMaxRange(0, 1);
@@ -570,6 +578,11 @@ public final class LoanApplicationCommandFromApiJsonHelper {
                     element);
             baseDataValidator.reset().parameter(repaymentEveryTypeParameterName).value(repaymentEveryType).notNull().inMinMaxRange(0, 3);
         }
+        
+        final String repaymentFrequencyNthDayTypeParameterName = "repaymentFrequencyNthDayType";
+        final String repaymentFrequencyDayOfWeekTypeParameterName = "repaymentFrequencyDayOfWeekType";
+        CalendarUtils.validateNthDayOfMonthFrequency(baseDataValidator, repaymentFrequencyNthDayTypeParameterName,
+                repaymentFrequencyDayOfWeekTypeParameterName, element, this.fromApiJsonHelper);
 
         final String interestTypeParameterName = "interestType";
         Integer interestType = null;

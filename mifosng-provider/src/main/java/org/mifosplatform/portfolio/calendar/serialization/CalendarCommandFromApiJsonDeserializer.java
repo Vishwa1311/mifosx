@@ -161,12 +161,9 @@ public class CalendarCommandFromApiJsonDeserializer extends AbstractFromApiJsonD
                     baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue()).value(repeatsOnDay)
                             .notBlank().inMinMaxRange(CalendarWeekDaysType.getMinValue(), CalendarWeekDaysType.getMaxValue());
                 } else if (CalendarFrequencyType.fromInt(frequency).isMonthly()) {
-                	final Integer repeatsOnNthDayOfMonth = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(
-                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_NTH_DAY_OF_MONTH.getValue(), element);                    
-                	final Integer repeatsOnDay = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(
-                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_LAST_WEEKDAY_OF_MONTH.getValue(), element);
-                	
-                	CalendarUtils.validateMonthFrequency(baseDataValidator, repeatsOnNthDayOfMonth, repeatsOnDay);
+                    CalendarUtils.validateNthDayOfMonthFrequency(baseDataValidator,
+                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_NTH_DAY_OF_MONTH.getValue(),
+                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_LAST_WEEKDAY_OF_MONTH.getValue(), element, this.fromApiJsonHelper);
                 }
             }
         }
@@ -293,11 +290,17 @@ public class CalendarCommandFromApiJsonDeserializer extends AbstractFromApiJsonD
                             .integerGreaterThanZero();
                 }
 
-                if (this.fromApiJsonHelper.parameterExists(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue(), element)) {
-                    final Integer repeatsOnDay = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(
-                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue(), element);
-                    baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue()).value(repeatsOnDay)
-                            .notBlank().inMinMaxRange(CalendarWeekDaysType.getMinValue(), CalendarWeekDaysType.getMaxValue());
+                if (CalendarFrequencyType.fromInt(frequency).isWeekly()) {
+                    if (this.fromApiJsonHelper.parameterExists(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue(), element)) {
+                        final Integer repeatsOnDay = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(
+                                CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue(), element);
+                        baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue()).value(repeatsOnDay)
+                                .notBlank().inMinMaxRange(CalendarWeekDaysType.getMinValue(), CalendarWeekDaysType.getMaxValue());
+                    }
+                } else if (CalendarFrequencyType.fromInt(frequency).isMonthly()) {
+                    CalendarUtils.validateNthDayOfMonthFrequency(baseDataValidator,
+                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_NTH_DAY_OF_MONTH.getValue(),
+                            CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_LAST_WEEKDAY_OF_MONTH.getValue(), element, this.fromApiJsonHelper);
                 }
             }
         }
