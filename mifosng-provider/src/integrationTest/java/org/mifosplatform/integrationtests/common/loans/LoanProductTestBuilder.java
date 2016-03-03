@@ -91,10 +91,8 @@ public class LoanProductTestBuilder {
     private String rescheduleStrategyMethod = "1";
     private String recalculationRestFrequencyType = "1";
     private String recalculationRestFrequencyInterval = "0";
-    private String recalculationRestFrequencyDate = null;
     private String recalculationCompoundingFrequencyType = null;
     private String recalculationCompoundingFrequencyInterval = null;
-    private String recalculationCompoundingFrequencyDate = null;
     private String minimumDaysBetweenDisbursalAndFirstRepayment = null;
     private Boolean holdGuaranteeFunds = null;
     private String mandatoryGuarantee = null;
@@ -164,11 +162,9 @@ public class LoanProductTestBuilder {
             map.put("rescheduleStrategyMethod", this.rescheduleStrategyMethod);
             map.put("recalculationRestFrequencyType", recalculationRestFrequencyType);
             map.put("recalculationRestFrequencyInterval", recalculationRestFrequencyInterval);
-            map.put("recalculationRestFrequencyDate", recalculationRestFrequencyDate);
             if (!RECALCULATION_COMPOUNDING_METHOD_NONE.equals(this.interestRecalculationCompoundingMethod)) {
                 map.put("recalculationCompoundingFrequencyType", recalculationCompoundingFrequencyType);
                 map.put("recalculationCompoundingFrequencyInterval", recalculationCompoundingFrequencyInterval);
-                map.put("recalculationCompoundingFrequencyDate", recalculationCompoundingFrequencyDate);
             }
             map.put("preClosureInterestCalculationStrategy", preCloseInterestCalculationStrategy);
             if (isArrearsBasedOnOriginalSchedule != null) {
@@ -424,20 +420,18 @@ public class LoanProductTestBuilder {
     }
 
     public LoanProductTestBuilder withInterestRecalculationRestFrequencyDetails(final String recalculationRestFrequencyType,
-            final String recalculationRestFrequencyInterval, final String recalculationRestFrequencyDate) {
+            final String recalculationRestFrequencyInterval) {
         this.isInterestRecalculationEnabled = true;
         this.recalculationRestFrequencyType = recalculationRestFrequencyType;
         this.recalculationRestFrequencyInterval = recalculationRestFrequencyInterval;
-        this.recalculationRestFrequencyDate = recalculationRestFrequencyDate;
         return this;
     }
 
     public LoanProductTestBuilder withInterestRecalculationCompoundingFrequencyDetails(final String recalculationCompoundingFrequencyType,
-            final String recalculationCompoundingFrequencyInterval, final String recalculationCompoundingFrequencyDate) {
+            final String recalculationCompoundingFrequencyInterval) {
         this.isInterestRecalculationEnabled = true;
         this.recalculationCompoundingFrequencyType = recalculationCompoundingFrequencyType;
         this.recalculationCompoundingFrequencyInterval = recalculationCompoundingFrequencyInterval;
-        this.recalculationCompoundingFrequencyDate = recalculationCompoundingFrequencyDate;
         return this;
     }
 

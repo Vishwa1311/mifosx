@@ -544,10 +544,12 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
             recurrenceBuilder.append(interval);
         }
         if (frequencyType.isWeekly()) {
-            final CalendarWeekDaysType weekDays = CalendarWeekDaysType.fromInt(repeatsOnDay);
-            if (!weekDays.isInvalid()) {
-                recurrenceBuilder.append(";BYDAY=");
-                recurrenceBuilder.append(weekDays.toString().toUpperCase());
+            if (repeatsOnDay != null) {
+                final CalendarWeekDaysType weekDays = CalendarWeekDaysType.fromInt(repeatsOnDay);
+                if (!weekDays.isInvalid()) {
+                    recurrenceBuilder.append(";BYDAY=");
+                    recurrenceBuilder.append(weekDays.toString().toUpperCase());
+                }
             }
         }
         if (frequencyType.isMonthly()) {

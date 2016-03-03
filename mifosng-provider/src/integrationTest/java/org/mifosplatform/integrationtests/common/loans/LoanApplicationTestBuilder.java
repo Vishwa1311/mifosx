@@ -48,8 +48,6 @@ public class LoanApplicationTestBuilder {
     private List<HashMap> disbursementData = null;
     @SuppressWarnings("rawtypes")
     private List<HashMap> charges = new ArrayList<>();
-    private String recalculationRestFrequencyDate = null;
-    private String recalculationCompoundingFrequencyDate = null;
     private String repaymentsStartingFromDate = null;
 
     private String calendarId;
@@ -121,12 +119,6 @@ public class LoanApplicationTestBuilder {
             map.put("fixedEmiAmount", fixedEmiAmount);
             map.put("maxOutstandingLoanBalance", maxOutstandingLoanBalance);
 
-        }
-        if (recalculationRestFrequencyDate != null) {
-            map.put("recalculationRestFrequencyDate", recalculationRestFrequencyDate);
-        }
-        if (recalculationCompoundingFrequencyDate != null) {
-            map.put("recalculationCompoundingFrequencyDate", recalculationCompoundingFrequencyDate);
         }
 
         System.out.println("Loan Application request : " + map);
@@ -265,16 +257,6 @@ public class LoanApplicationTestBuilder {
 
     public LoanApplicationTestBuilder withwithRepaymentStrategy(final String transactionProcessingStrategy) {
         this.transactionProcessingID = transactionProcessingStrategy;
-        return this;
-    }
-
-    public LoanApplicationTestBuilder withRestFrequencyDate(final String recalculationRestFrequencyDate) {
-        this.recalculationRestFrequencyDate = recalculationRestFrequencyDate;
-        return this;
-    }
-
-    public LoanApplicationTestBuilder withCompoundingFrequencyDate(final String recalculationCompoundingFrequencyDate) {
-        this.recalculationCompoundingFrequencyDate = recalculationCompoundingFrequencyDate;
         return this;
     }
 
