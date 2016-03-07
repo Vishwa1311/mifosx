@@ -195,6 +195,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                     + "lpr.compounding_frequency_weekday_enum as compoundingFrequencyWeekDayEnum, "
                     + "lpr.compounding_frequency_on_day as compoundingFrequencyOnDay, "
                     + "lpr.is_compounding_to_be_posted_as_transaction as isCompoundingToBePostedAsTransaction, "
+                    + "lpr.allow_compounding_on_eod as allowCompoundingOnEod, "
                     + "lp.hold_guarantee_funds as holdGuaranteeFunds, "
                     + "lp.principal_threshold_for_last_installment as principalThresholdForLastInstallment, "
                     + "lpg.id as lpgId, lpg.mandatory_guarantee as mandatoryGuarantee, "
@@ -394,12 +395,14 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                 final int preCloseInterestCalculationStrategyEnumValue = JdbcSupport.getInteger(rs, "preCloseInterestCalculationStrategy");
                 final EnumOptionData preCloseInterestCalculationStrategy = LoanEnumerations
                         .preCloseInterestCalculationStrategy(preCloseInterestCalculationStrategyEnumValue);
+                final boolean allowCompoundingOnEod = rs.getBoolean("allowCompoundingOnEod");
 
                 interestRecalculationData = new LoanProductInterestRecalculationData(lprId, productId,
                         interestRecalculationCompoundingType, rescheduleStrategyType, restFrequencyType, restFrequencyInterval,
                         restFrequencyNthDayEnum, restFrequencyWeekDayEnum, restFrequencyOnDay, compoundingFrequencyType,
                         compoundingInterval, compoundingFrequencyNthDayEnum, compoundingFrequencyWeekDayEnum, compoundingFrequencyOnDay,
-                        isArrearsBasedOnOriginalSchedule, isCompoundingToBePostedAsTransaction, preCloseInterestCalculationStrategy);
+                        isArrearsBasedOnOriginalSchedule, isCompoundingToBePostedAsTransaction, preCloseInterestCalculationStrategy, 
+                        allowCompoundingOnEod);
             }
 
             final boolean amortization = rs.getBoolean("amortizationBoolean");
@@ -429,7 +432,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
             final BigDecimal principalThresholdForLastInstallment = rs.getBigDecimal("principalThresholdForLastInstallment");
             final boolean accountMovesOutOfNPAOnlyOnArrearsCompletion = rs.getBoolean("accountMovesOutOfNPAOnlyOnArrearsCompletion");
-
+            
             return new LoanProductData(id, name, shortName, description, currency, principal, minPrincipal, maxPrincipal, tolerance,
                     numberOfRepayments, minNumberOfRepayments, maxNumberOfRepayments, repaymentEvery, interestRatePerPeriod,
                     minInterestRatePerPeriod, maxInterestRatePerPeriod, annualInterestRate, repaymentFrequencyType,

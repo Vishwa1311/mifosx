@@ -90,6 +90,9 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
     @Column(name = "is_compounding_to_be_posted_as_transaction")
     private Boolean isCompoundingToBePostedAsTransaction;
 
+    @Column(name = "allow_compounding_on_eod")
+    private Boolean allowCompoundingOnEod;
+
     protected LoanInterestRecalculationDetails() {
         // Default constructor for jpa repository
     }
@@ -97,7 +100,8 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
     private LoanInterestRecalculationDetails(final Integer interestRecalculationCompoundingMethod, final Integer rescheduleStrategyMethod,
             final Integer restFrequencyType, final Integer restInterval, final Integer restFrequencyNthDay, Integer restFrequencyWeekday,
             Integer restFrequencyOnDay, Integer compoundingFrequencyType, Integer compoundingInterval, Integer compoundingFrequencyNthDay,
-            Integer compoundingFrequencyWeekday, Integer compoundingFrequencyOnDay, final boolean isCompoundingToBePostedAsTransaction) {
+            Integer compoundingFrequencyWeekday, Integer compoundingFrequencyOnDay, final boolean isCompoundingToBePostedAsTransaction, 
+            final boolean allowCompoundingOnEod) {
         this.interestRecalculationCompoundingMethod = interestRecalculationCompoundingMethod;
         this.rescheduleStrategyMethod = rescheduleStrategyMethod;
         this.restFrequencyNthDay = restFrequencyNthDay;
@@ -111,6 +115,7 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
         this.compoundingFrequencyType = compoundingFrequencyType;
         this.compoundingInterval = compoundingInterval;
         this.isCompoundingToBePostedAsTransaction = isCompoundingToBePostedAsTransaction;
+        this.allowCompoundingOnEod = allowCompoundingOnEod;
     }
 
     public static LoanInterestRecalculationDetails createFrom(
@@ -125,7 +130,8 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
                 loanProductInterestRecalculationDetails.getCompoundingFrequencyNthDay(),
                 loanProductInterestRecalculationDetails.getCompoundingFrequencyWeekday(),
                 loanProductInterestRecalculationDetails.getCompoundingFrequencyOnDay(),
-                loanProductInterestRecalculationDetails.getIsCompoundingToBePostedAsTransaction());
+                loanProductInterestRecalculationDetails.getIsCompoundingToBePostedAsTransaction(),
+                loanProductInterestRecalculationDetails.allowCompoundingOnEod());
     }
 
     public void updateLoan(final Loan loan) {
@@ -183,5 +189,9 @@ public class LoanInterestRecalculationDetails extends AbstractPersistable<Long> 
     public boolean isCompoundingToBePostedAsTransaction(){
     	return null == this.isCompoundingToBePostedAsTransaction? false 
     			: this.isCompoundingToBePostedAsTransaction;
+    }
+
+    public boolean allowCompoundingOnEod() {
+        return this.allowCompoundingOnEod;
     }
 }

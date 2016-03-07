@@ -311,7 +311,7 @@ public class LoanScheduleAssembler {
         RecalculationFrequencyType compoundingFrequencyType = null;
         CalendarInstance compoundingCalendarInstance = null;
         InterestRecalculationCompoundingMethod compoundingMethod = null;
-
+        boolean allowCompoundingOnEod = false;
         if (isInterestRecalculationEnabled) {
             LoanProductInterestRecalculationDetails loanProductInterestRecalculationDetails = loanProduct
                     .getProductInterestRecalculationDetails();
@@ -351,7 +351,7 @@ public class LoanScheduleAssembler {
                             loanProductInterestRecalculationDetails.getCompoundingInterval(), recalculationCompoundingFrequencyNthDay,
                             compoundingRepeatsOnDay);
                 }
-
+                allowCompoundingOnEod = loanProductInterestRecalculationDetails.allowCompoundingOnEod();
             }
         }
 
@@ -419,7 +419,7 @@ public class LoanScheduleAssembler {
                 maxOutstandingBalance, graceOnArrearsAgeing, daysInMonthType, daysInYearType, isInterestRecalculationEnabled,
                 recalculationFrequencyType, restCalendarInstance, compoundingMethod, compoundingCalendarInstance, compoundingFrequencyType,
                 principalThresholdForLastInstalment, installmentAmountInMultiplesOf, loanProduct.preCloseInterestCalculationStrategy(),
-                calendar, BigDecimal.ZERO, loanTermVariations, detailDTO);
+                calendar, BigDecimal.ZERO, loanTermVariations, detailDTO, allowCompoundingOnEod);
     }
 
     private CalendarInstance createCalendarForSameAsRepayment(final Integer repaymentEvery,

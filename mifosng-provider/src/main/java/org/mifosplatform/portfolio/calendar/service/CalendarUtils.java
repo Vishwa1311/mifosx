@@ -34,11 +34,9 @@ import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.infrastructure.core.service.DateUtils;
 import org.mifosplatform.organisation.workingdays.domain.WorkingDays;
 import org.mifosplatform.organisation.workingdays.service.WorkingDaysUtil;
-import org.mifosplatform.portfolio.calendar.CalendarConstants.CALENDAR_SUPPORTED_PARAMETERS;
 import org.mifosplatform.portfolio.calendar.domain.Calendar;
 import org.mifosplatform.portfolio.calendar.domain.CalendarFrequencyType;
 import org.mifosplatform.portfolio.calendar.domain.CalendarWeekDaysType;
-import org.mifosplatform.portfolio.calendar.service.CalendarUtils.NthDayNameEnum;
 import org.mifosplatform.portfolio.common.domain.NthDayType;
 import org.mifosplatform.portfolio.common.domain.PeriodFrequencyType;
 
@@ -427,6 +425,7 @@ public class CalendarUtils {
         else
         	monthDays = recur.getSetPosList();
         if (monthDays.isEmpty()) return NthDayType.INVALID;
+        if (!recur.getMonthDayList().isEmpty() && recur.getSetPosList().isEmpty()) return NthDayType.ONDAY;
         // supports only one day
         Integer monthDay = (Integer) monthDays.get(0);
         return NthDayType.fromInt(monthDay);
@@ -615,7 +614,7 @@ public class CalendarUtils {
         final Integer repeatsOnNthDayOfMonth = fromApiJsonHelper.extractIntegerSansLocaleNamed(repeatsOnNthDayOfMonthParamName, element);
         baseDataValidator.reset().parameter(repeatsOnNthDayOfMonthParamName).value(repeatsOnNthDayOfMonth).ignoreIfNull()
                 .isOneOfTheseValues(NthDayType.ONE.getValue(), NthDayType.TWO.getValue(), NthDayType.THREE.getValue(),
-                        NthDayType.FOUR.getValue(), NthDayType.LAST.getValue());
+                        NthDayType.FOUR.getValue(), NthDayType.LAST.getValue(), NthDayType.ONDAY.getValue());
 
         final Integer repeatsOnDay = fromApiJsonHelper.extractIntegerSansLocaleNamed(repeatsOnDayParamName, element);
         baseDataValidator.reset().parameter(repeatsOnDayParamName).value(repeatsOnDay).ignoreIfNull()
@@ -633,4 +632,18 @@ public class CalendarUtils {
             }
         }
     }
+
+    public static Integer getMonthOnDay(String recurringRule) {
+        final Recur recur = CalendarUtils.getICalRecur(recurringRule);
+        NumberList monthDayList = null;
+        Integer monthOnDay = null;
+        if (getMeetingPeriodFrequencyType(recur).isMonthly()) {
+            monthDayList = recur.getMonthDayList();
+            if (!monthDayList.isEmpty()) {
+                monthOnDay = (Integer) monthDayList.get(0);
+            }
+        }
+        return monthOnDay;
+    }
+
 }

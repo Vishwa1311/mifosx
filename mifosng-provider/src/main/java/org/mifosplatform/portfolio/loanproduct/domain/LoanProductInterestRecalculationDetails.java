@@ -95,6 +95,9 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
     @Column(name = "is_compounding_to_be_posted_as_transaction")
     private Boolean isCompoundingToBePostedAsTransaction;
 
+    @Column(name = "allow_compounding_on_eod")
+    private Boolean allowCompoundingOnEod;
+
     protected LoanProductInterestRecalculationDetails() {
         //
     }
@@ -141,6 +144,7 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
         Integer compoundingRecurrenceOnNthDay = null;
         Integer compoundingRecurrenceOnDay = null;
         Integer compoundingRecurrenceOnWeekday = null;
+        boolean allowCompoundingOnEod = false;
         if (compoundingMethod.isCompoundingEnabled()) {
             compoundingRecurrenceFrequency = command
                     .integerValueOfParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyTypeParameterName);
@@ -167,6 +171,8 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
                     .integerValueOfParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyOnDayParamName);
             compoundingRecurrenceOnWeekday = command
                     .integerValueOfParameterNamed(LoanProductConstants.recalculationCompoundingFrequencyWeekdayParamName);
+            if (!compoundingFrequencyType.isDaily())
+                allowCompoundingOnEod = command.booleanPrimitiveValueOfParameterNamed(LoanProductConstants.allowCompoundingOnEodParamName);
         }
 
         Integer preCloseInterestCalculationStrategy = command
@@ -182,7 +188,7 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
                 recurrenceFrequency, recurrenceInterval, recurrenceOnNthDay, recurrenceOnDay, recurrenceOnWeekday,
                 compoundingRecurrenceFrequency, compoundingInterval, compoundingRecurrenceOnNthDay, compoundingRecurrenceOnDay,
                 compoundingRecurrenceOnWeekday, isArrearsBasedOnOriginalSchedule, preCloseInterestCalculationStrategy,
-                isCompoundingToBePostedAsTransaction);
+                isCompoundingToBePostedAsTransaction, allowCompoundingOnEod);
     }
 
     private LoanProductInterestRecalculationDetails(final Integer interestRecalculationCompoundingMethod,
@@ -191,7 +197,7 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
             Integer compoundingFrequencyType, Integer compoundingInterval, final Integer compoundingFrequencyNthDay,
             final Integer compoundingFrequencyOnDay, final Integer compoundingFrequencyWeekday,
             final boolean isArrearsBasedOnOriginalSchedule, final Integer preCloseInterestCalculationStrategy,
-            final boolean isCompoundingToBePostedAsTransaction) {
+            final boolean isCompoundingToBePostedAsTransaction, final boolean allowCompoundingOnEod) {
         this.interestRecalculationCompoundingMethod = interestRecalculationCompoundingMethod;
         this.rescheduleStrategyMethod = rescheduleStrategyMethod;
         this.restFrequencyType = restFrequencyType;
@@ -207,6 +213,7 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
         this.isArrearsBasedOnOriginalSchedule = isArrearsBasedOnOriginalSchedule;
         this.preClosureInterestCalculationStrategy = preCloseInterestCalculationStrategy;
         this.isCompoundingToBePostedAsTransaction = isCompoundingToBePostedAsTransaction;
+        this.allowCompoundingOnEod = allowCompoundingOnEod;
     }
 
     public void updateProduct(final LoanProduct loanProduct) {
@@ -301,7 +308,7 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
                 this.restFrequencyNthDay = null;
                 this.restFrequencyWeekday = null;
             }
-            
+
             if (frequencyType.isWeekly()) {
             	this.restFrequencyNthDay = null;
             	this.restFrequencyOnDay = null;
@@ -405,6 +412,15 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
             		this.compoundingFrequencyOnDay = null;
                 }
             }
+            if (!compoundingfrequencyType.isDaily()) {
+                if (command.isChangeInBooleanParameterNamed(LoanProductConstants.allowCompoundingOnEodParamName, allowCompoundingOnEod())) {
+                    boolean newValue = command.booleanPrimitiveValueOfParameterNamed(LoanProductConstants.allowCompoundingOnEodParamName);
+                    actualChanges.put(LoanProductConstants.allowCompoundingOnEodParamName, newValue);
+                    this.allowCompoundingOnEod = newValue;
+                }
+            } else {
+                this.allowCompoundingOnEod = false;
+            }
         } else {
             this.compoundingFrequencyType = null;
             this.compoundingInterval = null;
@@ -504,8 +520,11 @@ public class LoanProductInterestRecalculationDetails extends AbstractPersistable
         return this.compoundingFrequencyOnDay;
     }
 
-    
     public Boolean getIsCompoundingToBePostedAsTransaction() {
         return this.isCompoundingToBePostedAsTransaction;
+    }
+
+    public Boolean allowCompoundingOnEod() {
+        return this.allowCompoundingOnEod;
     }
 }

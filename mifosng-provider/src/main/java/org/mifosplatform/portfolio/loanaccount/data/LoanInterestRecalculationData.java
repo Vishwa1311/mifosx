@@ -31,6 +31,7 @@ public class LoanInterestRecalculationData {
     private final Boolean isCompoundingToBePostedAsTransaction;
     @SuppressWarnings("unused")
     private final CalendarData compoundingCalendarData;
+    private final boolean allowCompoundingOnEod;
 
     public LoanInterestRecalculationData(final Long id, final Long loanId, final EnumOptionData interestRecalculationCompoundingType,
             final EnumOptionData rescheduleStrategyType, final CalendarData calendarData,
@@ -39,7 +40,7 @@ public class LoanInterestRecalculationData {
             final Integer recalculationRestFrequencyOnDay, final CalendarData compoundingCalendarData,
             final EnumOptionData recalculationCompoundingFrequencyType, final Integer recalculationCompoundingFrequencyInterval,
             final EnumOptionData recalculationCompoundingFrequencyNthDay, final EnumOptionData recalculationCompoundingFrequencyWeekday,
-            final Integer recalculationCompoundingFrequencyOnDay, final Boolean isCompoundingToBePostedAsTransaction) {
+            final Integer recalculationCompoundingFrequencyOnDay, final Boolean isCompoundingToBePostedAsTransaction, final boolean allowCompoundingOnEod) {
         this.id = id;
         this.loanId = loanId;
         this.interestRecalculationCompoundingType = interestRecalculationCompoundingType;
@@ -62,6 +63,7 @@ public class LoanInterestRecalculationData {
         this.recalculationCompoundingFrequencyOnDay = recalculationCompoundingFrequencyOnDay;
         this.compoundingCalendarData = compoundingCalendarData;
         this.isCompoundingToBePostedAsTransaction = isCompoundingToBePostedAsTransaction;
+        this.allowCompoundingOnEod = allowCompoundingOnEod;
     }
 
     public static LoanInterestRecalculationData withCalendarData(final LoanInterestRecalculationData recalculationData,
@@ -73,7 +75,8 @@ public class LoanInterestRecalculationData {
                 recalculationData.recalculationRestFrequencyOnDay, compoundingCalendarData,
                 recalculationData.recalculationCompoundingFrequencyType, recalculationData.recalculationCompoundingFrequencyInterval,
                 recalculationData.recalculationCompoundingFrequencyNthDay, recalculationData.recalculationCompoundingFrequencyWeekday,
-                recalculationData.recalculationCompoundingFrequencyOnDay, recalculationData.isCompoundingToBePostedAsTransaction);
+                recalculationData.recalculationCompoundingFrequencyOnDay, recalculationData.isCompoundingToBePostedAsTransaction, 
+                recalculationData.allowCompoundingOnEod);
     }
 
     public Long getId() {

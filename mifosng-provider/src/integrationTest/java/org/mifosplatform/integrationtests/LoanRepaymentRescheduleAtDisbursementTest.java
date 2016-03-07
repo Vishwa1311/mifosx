@@ -130,25 +130,32 @@ public class LoanRepaymentRescheduleAtDisbursementTest {
 		assertEquals(String.valueOf(expectedvalues.get("totalDueForPeriod")), String.valueOf(firstInstallement.get("totalDueForPeriod")));
 
     }
-    
+
     private Integer createLoanProductWithInterestRecalculation(final String repaymentStrategy,
             final String interestRecalculationCompoundingMethod, final String rescheduleStrategyMethod,
             final String recalculationRestFrequencyType, final String recalculationRestFrequencyInterval,
             final String preCloseInterestCalculationStrategy, final Account[] accounts) {
         final String recalculationCompoundingFrequencyType = null;
         final String recalculationCompoundingFrequencyInterval = null;
+        final Integer recalculationCompoundingFrequencyOnDayType = null;
+        final Integer recalculationCompoundingFrequencyDayOfWeekType = null;
+        final Integer recalculationRestFrequencyOnDayType = null;
+        final Integer recalculationRestFrequencyDayOfWeekType = null;
         return createLoanProductWithInterestRecalculation(repaymentStrategy, interestRecalculationCompoundingMethod,
                 rescheduleStrategyMethod, recalculationRestFrequencyType, recalculationRestFrequencyInterval,
-                recalculationCompoundingFrequencyType, recalculationCompoundingFrequencyInterval,
-                preCloseInterestCalculationStrategy, accounts, null, false);
+                recalculationCompoundingFrequencyType, recalculationCompoundingFrequencyInterval, preCloseInterestCalculationStrategy,
+                accounts, null, false, recalculationCompoundingFrequencyOnDayType, recalculationCompoundingFrequencyDayOfWeekType,
+                recalculationRestFrequencyOnDayType, recalculationRestFrequencyDayOfWeekType);
     }
-    
+
     private Integer createLoanProductWithInterestRecalculation(final String repaymentStrategy,
             final String interestRecalculationCompoundingMethod, final String rescheduleStrategyMethod,
             final String recalculationRestFrequencyType, final String recalculationRestFrequencyInterval,
             final String recalculationCompoundingFrequencyType, final String recalculationCompoundingFrequencyInterval,
             final String preCloseInterestCalculationStrategy, final Account[] accounts, final String chargeId,
-            boolean isArrearsBasedOnOriginalSchedule) {
+            boolean isArrearsBasedOnOriginalSchedule, final Integer recalculationCompoundingFrequencyOnDayType,
+            final Integer recalculationCompoundingFrequencyDayOfWeekType, final Integer recalculationRestFrequencyOnDayType,
+            final Integer recalculationRestFrequencyDayOfWeekType) {
         System.out.println("------------------------------CREATING NEW LOAN PRODUCT ---------------------------------------");
         LoanProductTestBuilder builder = new LoanProductTestBuilder()
                 .withPrincipal("10000.00")
@@ -163,9 +170,11 @@ public class LoanRepaymentRescheduleAtDisbursementTest {
                 .withInterestTypeAsDecliningBalance()
                 .withInterestRecalculationDetails(interestRecalculationCompoundingMethod, rescheduleStrategyMethod,
                         preCloseInterestCalculationStrategy)
-                .withInterestRecalculationRestFrequencyDetails(recalculationRestFrequencyType, recalculationRestFrequencyInterval)
+                .withInterestRecalculationRestFrequencyDetails(recalculationRestFrequencyType, recalculationRestFrequencyInterval,
+                        recalculationRestFrequencyOnDayType, recalculationRestFrequencyDayOfWeekType)
                 .withInterestRecalculationCompoundingFrequencyDetails(recalculationCompoundingFrequencyType,
-                        recalculationCompoundingFrequencyInterval);
+                        recalculationCompoundingFrequencyInterval, recalculationCompoundingFrequencyOnDayType,
+                        recalculationCompoundingFrequencyDayOfWeekType);
         if (accounts != null) {
             builder = builder.withAccountingRulePeriodicAccrual(accounts);
         }
@@ -175,7 +184,7 @@ public class LoanRepaymentRescheduleAtDisbursementTest {
         final String loanProductJSON = builder.build(chargeId);
         return this.loanTransactionHelper.getLoanProductId(loanProductJSON);
     }
-    
+
     private Integer applyForLoanApplicationForInterestRecalculation(final Integer clientID, final Integer loanProductID,
             final String disbursementDate, final String repaymentStrategy, final List<HashMap> charges, List<HashMap> tranches) {
         final String graceOnInterestPayment = null;

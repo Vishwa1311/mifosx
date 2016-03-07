@@ -937,7 +937,7 @@ public class LoanProductData {
                 getInterestRecalculationRestOnDayType(), compoundingCalendarData, getRecalculationCompoundingFrequencyType(),
                 getRecalculationCompoundingFrequencyInterval(), getInterestRecalculationCompoundingNthDayType(),
                 getInterestRecalculationCompoundingWeekDayType(), getInterestRecalculationCompoundingOnDayType(),
-                isCompoundingToBePostedAsTransaction());
+                isCompoundingToBePostedAsTransaction(), allowCompoundingOnEod());
     }
 
     private EnumOptionData getRescheduleStrategyType() {
@@ -1016,6 +1016,11 @@ public class LoanProductData {
 
     public Boolean isCompoundingToBePostedAsTransaction() {
         if (isInterestRecalculationEnabled()) { return this.interestRecalculationData.isCompoundingToBePostedAsTransaction(); }
+        return null;
+    }
+
+    public Boolean allowCompoundingOnEod() {
+        if (isInterestRecalculationEnabled()) { return this.interestRecalculationData.allowCompoundingOnEod(); }
         return null;
     }
 

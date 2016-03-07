@@ -129,7 +129,8 @@ public class CalendarEnumerations {
     public static List<EnumOptionData> calendarFrequencyNthDayType() {
         final List<EnumOptionData> optionDatas = Arrays.asList(calendarFrequencyNthDayType(NthDayType.ONE),
         		calendarFrequencyNthDayType(NthDayType.TWO), calendarFrequencyNthDayType(NthDayType.THREE),
-        		calendarFrequencyNthDayType(NthDayType.FOUR), calendarFrequencyNthDayType(NthDayType.LAST));
+        		calendarFrequencyNthDayType(NthDayType.FOUR), calendarFrequencyNthDayType(NthDayType.LAST), 
+        		calendarFrequencyNthDayType(NthDayType.ONDAY));
         return optionDatas;
     }
 }

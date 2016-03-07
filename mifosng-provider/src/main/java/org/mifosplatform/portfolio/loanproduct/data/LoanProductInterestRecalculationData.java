@@ -39,6 +39,7 @@ public class LoanProductInterestRecalculationData {
     private final boolean isCompoundingToBePostedAsTransaction;
     @SuppressWarnings("unused")
     private final EnumOptionData preClosureInterestCalculationStrategy;
+    private final boolean allowCompoundingOnEod;
 
     public LoanProductInterestRecalculationData(final Long id, final Long productId,
             final EnumOptionData interestRecalculationCompoundingType, final EnumOptionData rescheduleStrategyType,
@@ -48,7 +49,7 @@ public class LoanProductInterestRecalculationData {
             final Integer recalculationCompoundingFrequencyInterval, final EnumOptionData recalculationCompoundingFrequencyNthDay,
             final EnumOptionData recalculationCompoundingFrequencyWeekday, final Integer recalculationCompoundingFrequencyOnDay,
             final boolean isArrearsBasedOnOriginalSchedule, boolean isCompoundingToBePostedAsTransaction,
-            final EnumOptionData preCloseInterestCalculationStrategy) {
+            final EnumOptionData preCloseInterestCalculationStrategy, final boolean allowCompoundingOnEod) {
         this.id = id;
         this.productId = productId;
         this.interestRecalculationCompoundingType = interestRecalculationCompoundingType;
@@ -71,6 +72,7 @@ public class LoanProductInterestRecalculationData {
         this.isArrearsBasedOnOriginalSchedule = isArrearsBasedOnOriginalSchedule;
         this.preClosureInterestCalculationStrategy = preCloseInterestCalculationStrategy;
         this.isCompoundingToBePostedAsTransaction = isCompoundingToBePostedAsTransaction;
+        this.allowCompoundingOnEod = allowCompoundingOnEod;
     }
 
     public static LoanProductInterestRecalculationData sensibleDefaultsForNewLoanProductCreation() {
@@ -93,12 +95,13 @@ public class LoanProductInterestRecalculationData {
         final boolean isArrearsBasedOnOriginalSchedule = false;
         final boolean isCompoundingToBePostedAsTransaction = false;
         final EnumOptionData preCloseInterestCalculationStrategy = preCloseInterestCalculationStrategy(LoanPreClosureInterestCalculationStrategy.TILL_PRE_CLOSURE_DATE);
+        final boolean allowCompoundingOnEod = false;
         return new LoanProductInterestRecalculationData(id, productId, interestRecalculationCompoundingType, rescheduleStrategyType,
                 recalculationRestFrequencyType, recalculationRestFrequencyInterval, recalculationRestFrequencyNthDay,
                 recalculationRestFrequencyWeekday, recalculationRestFrequencyOnDay, recalculationCompoundingFrequencyType,
                 recalculationCompoundingFrequencyInterval, recalculationCompoundingFrequencyNthDay,
                 recalculationCompoundingFrequencyWeekday, recalculationCompoundingFrequencyOnDay, isArrearsBasedOnOriginalSchedule,
-                isCompoundingToBePostedAsTransaction, preCloseInterestCalculationStrategy);
+                isCompoundingToBePostedAsTransaction, preCloseInterestCalculationStrategy, allowCompoundingOnEod);
     }
 
     public EnumOptionData getInterestRecalculationCompoundingType() {
@@ -153,4 +156,7 @@ public class LoanProductInterestRecalculationData {
         return this.isCompoundingToBePostedAsTransaction;
     }
 
+    public boolean allowCompoundingOnEod() {
+        return this.allowCompoundingOnEod;
+    }
 }

@@ -523,9 +523,17 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
                 repeatsOnDay = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY.getValue());
             }
             Integer repeatsOnNthDayOfMonth = null;
-            if(frequencyType.isMonthly()) {
-            	repeatsOnNthDayOfMonth = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_NTH_DAY_OF_MONTH.getValue());
-            	repeatsOnDay = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_LAST_WEEKDAY_OF_MONTH.getValue());
+            if (frequencyType.isMonthly()) {
+                repeatsOnNthDayOfMonth = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_NTH_DAY_OF_MONTH
+                        .getValue());
+                final NthDayType nthDay = NthDayType.fromInt(repeatsOnNthDayOfMonth);
+                repeatsOnDay = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_LAST_WEEKDAY_OF_MONTH
+                        .getValue());
+                if (nthDay.isOnDay()) {
+                    repeatsOnNthDayOfMonth = command.integerValueOfParameterNamed(CALENDAR_SUPPORTED_PARAMETERS.REPEATS_ON_DAY_OF_MONTH
+                            .getValue());
+                    repeatsOnDay = null;
+                }
             }
 
             return constructRecurrence(frequencyType, interval, repeatsOnDay, repeatsOnNthDayOfMonth);
@@ -554,7 +562,7 @@ public class Calendar extends AbstractAuditableCustom<AppUser, Long> {
         }
         if (frequencyType.isMonthly()) {
         	if(repeatsOnNthDayOfMonth != null && (repeatsOnDay == null || repeatsOnDay == CalendarWeekDaysType.INVALID.getValue())) {
-            	if (repeatsOnNthDayOfMonth >= -1 && repeatsOnNthDayOfMonth <= 31) {
+            	if (repeatsOnNthDayOfMonth >= -1 && repeatsOnNthDayOfMonth <= 28) {
             		recurrenceBuilder.append(";BYMONTHDAY=");
             		recurrenceBuilder.append(repeatsOnNthDayOfMonth);
             	}

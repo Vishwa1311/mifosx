@@ -103,10 +103,14 @@ public class LoanProductTestBuilder {
     private String graceOnInterestPayment = "1";
     private JsonObject allowAttributeOverrides = null;
     private Boolean allowPartialPeriodInterestCalcualtion = false;
-    
+
     private Boolean allowVariableInstallments = Boolean.FALSE;
     private Integer minimumGap;
     private Integer maximumGap;
+    private Integer recalculationCompoundingFrequencyOnDayType = null;
+    private Integer recalculationRestFrequencyOnDayType = null;
+    private Integer recalculationCompoundingFrequencyDayOfWeekType = null;
+    private Integer recalculationRestFrequencyDayOfWeekType = null;
 
     public String build(final String chargeId) {
         final HashMap<String, Object> map = new HashMap<>();
@@ -170,6 +174,10 @@ public class LoanProductTestBuilder {
             if (isArrearsBasedOnOriginalSchedule != null) {
                 map.put("isArrearsBasedOnOriginalSchedule", isArrearsBasedOnOriginalSchedule);
             }
+            map.put("recalculationCompoundingFrequencyOnDayType", this.recalculationCompoundingFrequencyOnDayType);
+            map.put("recalculationCompoundingFrequencyDayOfWeekType", this.recalculationCompoundingFrequencyDayOfWeekType);
+            map.put("recalculationRestFrequencyOnDayType", this.recalculationRestFrequencyOnDayType);
+            map.put("recalculationRestFrequencyDayOfWeekType", this.recalculationRestFrequencyDayOfWeekType);
         }
         if (holdGuaranteeFunds != null) {
             map.put("holdGuaranteeFunds", this.holdGuaranteeFunds);
@@ -185,10 +193,10 @@ public class LoanProductTestBuilder {
             map.put("allowAttributeOverrides", this.allowAttributeOverrides);
         }
         map.put("allowPartialPeriodInterestCalcualtion", this.allowPartialPeriodInterestCalcualtion);
-        map.put("allowVariableInstallments", allowVariableInstallments) ;
-        if(allowVariableInstallments) {
-            map.put("minimumGap", minimumGap) ;
-            map.put("maximumGap", maximumGap) ;
+        map.put("allowVariableInstallments", allowVariableInstallments);
+        if (allowVariableInstallments) {
+            map.put("minimumGap", minimumGap);
+            map.put("maximumGap", maximumGap);
         }
         return new Gson().toJson(map);
     }
@@ -420,18 +428,24 @@ public class LoanProductTestBuilder {
     }
 
     public LoanProductTestBuilder withInterestRecalculationRestFrequencyDetails(final String recalculationRestFrequencyType,
-            final String recalculationRestFrequencyInterval) {
+            final String recalculationRestFrequencyInterval, final Integer recalculationRestFrequencyOnDayType,
+            final Integer recalculationRestFrequencyDayOfWeekType) {
         this.isInterestRecalculationEnabled = true;
         this.recalculationRestFrequencyType = recalculationRestFrequencyType;
         this.recalculationRestFrequencyInterval = recalculationRestFrequencyInterval;
+        this.recalculationRestFrequencyOnDayType = recalculationRestFrequencyOnDayType;
+        this.recalculationRestFrequencyDayOfWeekType = recalculationRestFrequencyDayOfWeekType;
         return this;
     }
 
     public LoanProductTestBuilder withInterestRecalculationCompoundingFrequencyDetails(final String recalculationCompoundingFrequencyType,
-            final String recalculationCompoundingFrequencyInterval) {
+            final String recalculationCompoundingFrequencyInterval, final Integer recalculationCompoundingFrequencyOnDayType,
+            final Integer recalculationCompoundingFrequencyDayOfWeekType) {
         this.isInterestRecalculationEnabled = true;
         this.recalculationCompoundingFrequencyType = recalculationCompoundingFrequencyType;
         this.recalculationCompoundingFrequencyInterval = recalculationCompoundingFrequencyInterval;
+        this.recalculationCompoundingFrequencyOnDayType = recalculationCompoundingFrequencyOnDayType;
+        this.recalculationCompoundingFrequencyDayOfWeekType = recalculationCompoundingFrequencyDayOfWeekType;
         return this;
     }
 
@@ -464,11 +478,12 @@ public class LoanProductTestBuilder {
         this.allowAttributeOverrides = loanProductConfigurableAttributes;
         return this;
     }
-    
+
     public LoanProductTestBuilder withVariableInstallmentsConfig(Boolean allowVariableInstallments, Integer minimumGap, Integer maximumGap) {
-        this.allowVariableInstallments = allowVariableInstallments ;
+        this.allowVariableInstallments = allowVariableInstallments;
         this.minimumGap = minimumGap;
         this.maximumGap = maximumGap;
-        return this ;
+        return this;
     }
+
 }

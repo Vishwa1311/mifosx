@@ -13,6 +13,7 @@ public enum NthDayType {
 	FOUR(4,"nthDayType.four"),
 	FIVE(5,"nthDayType.five"),
 	LAST(-1,"nthDayType.last"),
+	ONDAY(-2,"nthDayType.onday"),
 	INVALID(0,"nthDayType.invalid");
 	
 	private final Integer value;
@@ -53,15 +54,25 @@ public enum NthDayType {
                 case -1:
                     repaymentFrequencyNthDayType = NthDayType.LAST;
                 break;
+                case -2:
+                    repaymentFrequencyNthDayType = NthDayType.ONDAY;
+                break;
                 default:
                 break;
             }
         }
         return repaymentFrequencyNthDayType;
     }
-	
-	public boolean isInvalid() {
+
+    public boolean isInvalid() {
         return this.value.equals(NthDayType.INVALID.value);
     }
-   
+
+    public boolean isLastDay() {
+        return this.value.equals(NthDayType.LAST.value);
+    }
+
+    public boolean isOnDay() {
+        return this.value.equals(NthDayType.ONDAY.value);
+    }
 }
