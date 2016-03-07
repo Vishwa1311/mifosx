@@ -1384,7 +1384,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                             && loanRepaymentScheduleInstallment.getDueDate().isBefore(DateUtils.getLocalDateOfTenant());
                     Money amountCharged = getIncomeForCompounding(loanApplicationTerms, currency, loanRepaymentScheduleInstallment);
                     final Map<LocalDate, Money> compoundingMap = params.getCompoundingMap();
-                    LocalDate compoundingEffectiveDate = getNextCompoundScheduleDate(loanRepaymentScheduleInstallment.getFromDate(),
+                    LocalDate compoundingEffectiveDate = getNextCompoundScheduleDate(loanRepaymentScheduleInstallment.getFromDate().minusDays(1),
                             loanApplicationTerms, holidayDetailDTO);
                     final LocalDate restDate = getNextRestScheduleDate(scheduledDueDate.minusDays(1), loanApplicationTerms,
                             holidayDetailDTO);
@@ -1402,7 +1402,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                             Money compounedAmount = compoundingMap.get(compoundingEffectiveDate);
                             totalCompoundedAmount = totalCompoundedAmount.plus(compounedAmount);
                         }
-                        compoundingEffectiveDate = getNextCompoundScheduleDate(compoundingEffectiveDate.plusDays(1), loanApplicationTerms,
+                        compoundingEffectiveDate = getNextCompoundScheduleDate(compoundingEffectiveDate, loanApplicationTerms,
                                 holidayDetailDTO);
                     }
                     if (isPastDate) {
@@ -1494,7 +1494,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
             LocalDate compoundingDate = startDate;
             boolean addUncompounded = true;
             while (compoundingDate.isBefore(endDate)) {
-                compoundingDate = getNextCompoundScheduleDate(compoundingDate, loanApplicationTerms, holidayDetailDTO);
+                compoundingDate = getNextCompoundScheduleDate(compoundingDate.minusDays(1), loanApplicationTerms, holidayDetailDTO);
                 if (compoundingDate.isBefore(endDate)) {
                     Money feeChargesForInstallment = cumulativeFeeChargesDueWithin(lastCompoundingDate, compoundingDate, charges, currency,
                             null, loanApplicationTerms.getPrincipal(), null, false);
